@@ -3,7 +3,7 @@ import "./Game.css";
 import Square from "./Square";
 import rook_w from "./Chess_rlt45.svg";
 import React, {FC, ReactNode, SyntheticEvent} from "react";
-import {MyComponent} from "./MyComponent";
+
 
 
 function Game() {
@@ -62,7 +62,7 @@ function Game() {
           <div className="blockB"> x </div>  <div className="block"> z </div>
           <div className="blockB"> x </div>  <div className="block"> z </div>
           <div className="blockB"> <img src={rook_w} alt="rook white"/> </div>  
-          <MyComponent />
+          
         </div>
 
 
