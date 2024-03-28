@@ -1,0 +1,12 @@
+.link {
+    display: flex;
+  justify-content: center;
+  align-items: center;
+  
+  
+  color: #1ED2C7;
+  font-size: 1em;
+  font-family: "Roboto Mono";
+  font-weight: 700;
+  margin-left: 1em;
+}

@@ -1,0 +1,27 @@
+import Identicon from '@polkadot/react-identicon';
+import { buttonStyles } from '@gear-js/ui';
+import { Button } from '@chakra-ui/react';
+import "./style.css";
+
+type Props = {
+  address: string;
+  name: string | undefined;
+  onClick: () => void;
+  isActive?: boolean;
+  block?: boolean;
+};
+
+function AccountButton({ address, name, onClick, isActive, block }: Props) {
+  
+  return (
+    <Button backgroundColor="gray" borderRadius="20px"  onClick={onClick}>
+      <Identicon value={address} className={buttonStyles.icon} theme="polkadot" size={28} />
+      {name} 
+      
+
+
+    </Button>
+  );
+}
+
+export { AccountButton };

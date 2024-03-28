@@ -1,0 +1,46 @@
+.board {
+
+    border-style: solid;
+    border-width: 0.2em;
+    border-color: black;
+    width: 36.6em;
+    height: 36.6em;
+    padding: 0.1em 0.1em;
+}
+
+.block {
+    float: left;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+
+    border-style: solid;
+
+
+
+    border-width: 0.1em;
+    border-color: black;
+    background-color: linear-gradient(#111111, #999999);
+    width: 4.5em;
+    height: 4.5em;
+}
+.blockB {
+    float: left;
+    display: flex; 
+    justify-content: center; 
+    align-items: center; 
+
+    border-style: solid;
+    border-width: 0.1em;
+    border-color: black;
+    background-color:firebrick;
+    width: 4.5em;
+    height: 4.5em;
+}
+
+.row:after {
+    content: "";
+    display: table;
+    clear: both;
+  }
