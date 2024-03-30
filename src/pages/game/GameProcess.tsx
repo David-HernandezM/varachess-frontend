@@ -15,23 +15,38 @@ import {
 } from '@chakra-ui/react'
 
 const GameProcess = () => {
-    //const players = [ ['Jovana', 99], ['Lulu', 888], ['Molly', 54] ]
     const [players, setPlayers] = useState<string[][]>([]);
     
     useEffect(() => { 
-        fetch(`http://localhost:5000/listplayers`)
-                .then(response => response.json())
-                .then(data => {
-                    console.log("Called the list of players")
-                    console.log(data);
-                    setPlayers(data);
-                })
-                .catch(error => console.error(error));
-
+        const interval = setInterval(() => {
+            fetch(`http://localhost:5000/listplayers`)
+                    .then(response => response.json())
+                    .then(data => {
+                        console.log("Called the list of players")
+                        console.log(data);
+                        // quitarme a mi mismo...
+                        let listPlayers: string[][] = [];
+                        data.forEach( (elem: string[])  => {
+                            if( elem[0] !== localStorage.namewallet ){
+                                listPlayers.push(elem )
+                            }
+                        });
+                        setPlayers(listPlayers);
+                    })
+                    .catch(error => console.error(error));
+                }, 5000);
+            return () => clearInterval(interval);
     }, [])
 
-    const selectPlayer = (player: string) => {
-        console.log("You are selecting a player " + player)
+    const selectPlayer = (player: string, player_id: string) => {
+        console.log("You are selecting a player " + player + " with ID: " + player_id)
+        fetch(`http://localhost:5000/invite?player_id_from=${player}&player_id_to=${player_id}`)
+        .then(response => response.json())
+        .then(data => {
+            console.log("Invitation status: ");
+            console.log(data)
+        })
+        .catch(error => console.error(error));
     }
 
     return (
@@ -48,7 +63,7 @@ const GameProcess = () => {
                     <Tbody>
                         {players.map((item, index) =>  ( 
                             <Tr>
-                            <Td > <Button onClick={() => selectPlayer(item[1])}> {item[1]} </Button> </Td>
+                            <Td > <Button  onClick={() => selectPlayer(item[0], item[2])} > {item[0]} </Button> </Td>
                             <Td>{item[2]}</Td>
                             </Tr>
                         ))}

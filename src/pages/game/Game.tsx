@@ -7,7 +7,7 @@ import { EndButton } from "./EndButton";
 import { HStack, VStack} from "@chakra-ui/react";
 import { GameProcess } from "./GameProcess";
 
-
+//  <ChessGame />
 
 function Game() {
 
@@ -17,7 +17,7 @@ function Game() {
       <VStack>
         <GameProcess />
 
-      <ChessGame />
+     
       
         <HStack>
           <PlayButton />

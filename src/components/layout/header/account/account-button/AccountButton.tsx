@@ -18,8 +18,6 @@ function AccountButton({ address, name, onClick, isActive, block }: Props) {
       <Identicon value={address} className={buttonStyles.icon} theme="polkadot" size={28} />
       {name} 
       
-
-
     </Button>
   );
 }

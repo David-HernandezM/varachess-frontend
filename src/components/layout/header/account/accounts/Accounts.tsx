@@ -17,6 +17,7 @@ function Accounts({ list, onChange }: Props) {
   const handleAccountButtonClick = (account: InjectedAccountWithMeta) => {
     login(account);
     localStorage.setItem(LOCAL_STORAGE.ACCOUNT, account.address);
+    localStorage.setItem('namewallet', account.meta.name as string);
     onChange();
   };
 
