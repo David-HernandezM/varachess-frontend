@@ -38,9 +38,9 @@ const GameProcess = () => {
             return () => clearInterval(interval);
     }, [])
 
-    const selectPlayer = (player: string, player_id: string) => {
-        console.log("You are selecting a player " + player + " with ID: " + player_id)
-        fetch(`http://localhost:5000/invite?player_id_from=${player}&player_id_to=${player_id}`)
+    const selectPlayer = (player_id: string) => {
+        console.log("You have player ID" + localStorage.playerID + " with ID: " + player_id)
+        fetch(`http://localhost:5000/invite?player_id_from=${localStorage.playerID}&player_id_to=${player_id}`)
         .then(response => response.json())
         .then(data => {
             console.log("Invitation status: ");
@@ -63,7 +63,7 @@ const GameProcess = () => {
                     <Tbody>
                         {players.map((item, index) =>  ( 
                             <Tr>
-                            <Td > <Button  onClick={() => selectPlayer(item[0], item[2])} > {item[0]} </Button> </Td>
+                            <Td > <Button  onClick={() => selectPlayer(item[2])} > {item[0]} </Button> </Td>
                             <Td>{item[2]}</Td>
                             </Tr>
                         ))}

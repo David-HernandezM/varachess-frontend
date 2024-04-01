@@ -30,6 +30,8 @@ function Account() {
                   .then(response => response.json())
                   .then(data => {
                     console.log("This is the result of calling loginplayer:" + JSON.stringify(data));
+                    localStorage.playerID = data.status;
+                    console.log("localSotrage.playerID = " + localStorage.playerID)
 
                   })
                   .catch(error => console.error(error));
