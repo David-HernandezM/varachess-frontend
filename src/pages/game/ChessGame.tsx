@@ -14,9 +14,12 @@ const contra: contra_interface<string> = {
     b: 'w'
 };
 
+interface Props {
+    playerId: string;
+    gameId: string;
+  }
 
-
-const ChessGame = () => {
+const ChessGame : React.FC<Props> = ( {playerId, gameId}) => {
 
     const [fen, setFen] = useState('start');
     const [game, setGame] = useState(new Chess());
@@ -28,8 +31,8 @@ const ChessGame = () => {
     const [count, setCount] = useState(0);
 
     const [playerColor, setPlayerColor] = useState<string>('w');
-    const [playerId, setPlayerId] = useState('0');
-    const [gameId, setGameId] = useState('0');
+    //const [playerId, setPlayerId] = useState('0');
+    // const [gameId, setGameId] = useState('0');
 
 
     const [checkState, setCheckState] = useState<boolean>(false);
@@ -211,11 +214,11 @@ const ChessGame = () => {
         )
     }
 
-    function InputPlayerIdState() {
-        return (
-            <input type='text' onChange={e => setPlayerId(e.target.value)} value={playerId} />
-        )
-    }
+    //function InputPlayerIdState() {
+     //   return (
+      //      <input type='text' onChange={e => setPlayerId(e.target.value)} value={playerId} />
+    //    )
+  //  }
 
     function ResetGame(){
         function resetGame(){
@@ -260,11 +263,9 @@ const ChessGame = () => {
                 <h3> GameOver: {gameoverState.toString()} </h3>
                 <h3> Winner: {winner} </h3>
             <RadioColorSelect />
-            <p> Player ID: </p>
-            <input style={{ color: "blue" }} type='text' onChange={e => setPlayerId(e.target.value)} value={playerId} />
-            <p> Game ID: </p>
-            <input style={{ color: "red" }} type='text' onChange={e => setGameId(e.target.value)} value={gameId} />
-
+            <p> Player ID: {playerId} </p>
+            <p> Game ID: {gameId} </p>
+           
             
             <ResetGame />
 
@@ -272,3 +273,6 @@ const ChessGame = () => {
     );
 };
 export { ChessGame };
+//  <input style={{ color: "blue" }} type='text' onChange={e => setPlayerId(e.target.value)} value={playerId} />
+
+//  <input style={{ color: "red" }} type='text' onChange={e => setGameId(e.target.value)} value={gameId} />
