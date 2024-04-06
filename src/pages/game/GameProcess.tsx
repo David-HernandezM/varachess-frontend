@@ -14,25 +14,42 @@ import {
     Button,
 } from '@chakra-ui/react'
 
-const MySentInvitations = (  ) => {
+interface PropsMySentInvitations {
+    sendDataToParent: (arg: string, arg2:string, arg3:string, arg4:string, arg5:string) => void
+
+}
+
+const MySentInvitations: React.FC<PropsMySentInvitations>  = ( {sendDataToParent} ) => {
     const [myArray, setMyArray] = useState<string[][]>([]);
     useEffect( () => {
-        fetch(`http://localhost:5000/mysentinvitations/${localStorage.playerID}`)
-        .then(response => response.json())
-        .then(data => {
-            console.log("MY INVITATIONS: ");
-            console.log(data)
-            setMyArray(data);
+        const interval = setInterval(() => {
+            fetch(`http://localhost:5000/mysentinvitations/${localStorage.playerID}`)
+            .then(response => response.json())
+            .then(data => {
+                console.log("MY INVITATIONS: ");
+                console.log(data)
+                setMyArray(data);
+                if( data.length > 0){
+                    data.forEach( (r:string) => {
+                        if( r[5] == 'ACCEPTED' ) {
+                            console.log("~~~~The game has been accepted!!!");
+                            sendDataToParent(r[6], r[1], r[7], r[8],r[9])
+                        }
+                   })
+                }
+                
 
-            
-        })
-        .catch(error => console.error(error));
+                
+            })
+            .catch(error => console.error(error));
+        }, 500);
+    return () => clearInterval(interval);
     }, [])
     return (
         <>
         <h3> These are the sent invitations </h3>
         {myArray.map((item, index) =>  ( 
-            <p> {item[0]} {item[1]} {item[2]} {item[3]}  {item[4]} {item[5]} {item[6]}  </p> 
+            <p> {item[0]} {item[1]} {item[2]} {item[3]}  {item[4]} {item[5]} {item[6]} {item[7]} </p> 
         ))}
         </>
     )
@@ -40,21 +57,26 @@ const MySentInvitations = (  ) => {
 
 
 interface Props {
-    sendDataToParent: (arg: string, arg2:string, arg3:string) => void
+    sendDataToParent: (arg: string, arg2:string, arg3:string, arg4:string, arg5:string) => void
     player_id_from: string;
     player_name_from: string;
+    player_id_white: string;
+    player_id_black: string;
+
   }
-  const AcceptButton: React.FC<Props> = ({sendDataToParent, player_id_from, player_name_from}) => {
+  const AcceptButton: React.FC<Props> = ({sendDataToParent, player_id_from, player_name_from, player_id_white, player_id_black}) => {
     const [gameid, setGameId] = useState<number>(0);
     const acceptInvitation = () => {
         console.log("You want to accept the invitation from  " + player_name_from)
+
+
         fetch(`http://localhost:5000/acceptdeclineinvitation/${localStorage.playerID}/${player_id_from}/1`)
         .then(response => response.json())
         .then(data => {
             console.log("You tried to accept invitation, here is response: ");
             console.log(data);
             setGameId(data)
-            sendDataToParent(data, player_id_from, player_name_from)
+            sendDataToParent(data, player_id_from, player_name_from,player_id_white, player_id_black )
 
         })
         .catch(error => console.error(error));
@@ -67,7 +89,7 @@ interface Props {
   };
 
   interface IsecondChildProps {
-    sendDataToParent: (arg: string, arg2:string, arg3:string) => void
+    sendDataToParent: (arg: string, arg2:string, arg3:string, arg4:string, arg5:string) => void
   
   }
 
@@ -95,10 +117,11 @@ const MyInvitations: React.FC<IsecondChildProps> = ({sendDataToParent}) => {
         <>
         <h3> I AM BEEING INVITED TO:</h3>
         {myArray.map((item, index) =>  ( 
-            <p> {item[0]} {item[1]} {item[2]} 
-            <AcceptButton  sendDataToParent={sendDataToParent} player_id_from={item[1]} player_name_from={item[0]} /> </p>
+            <p>GAME_ID: {item[4]} {item[0]} {item[1]} {item[2]} {item[5]}  {item[6]} 
+            <AcceptButton  sendDataToParent={sendDataToParent} player_id_from={item[1]} 
+                        player_name_from={item[0]} player_id_white={item[5]} player_id_black={item[6]}/> </p>
         ))}
-        <button onClick={() => sendDataToParent('', '', '')} > JUST UPDATE PARRENT </button>
+        <button onClick={() => sendDataToParent('', '', '', '', '')} > JUST UPDATE PARRENT </button>
         </>
     )
 }
@@ -110,13 +133,21 @@ const GameProcess = () => {
     const [gameId, setGameId] = useState("");
     const [otherPlayerId, setOtherPlayerId] = useState("");
     const [otherPlayerName, setOtherPlayerName] = useState("");
+    const [whitePlayerId, setWhitePlayerId] = useState("");
+    const [blackPlayerId, setBlackPlayerId] = useState("");
 
 
-    const handleDataFromChild = (gameId: string, otherPlayerId: string, otherPlayerName: string):void => {
+
+    const handleDataFromChild = (gameId: string, otherPlayerId: string, otherPlayerName: string,
+                                whitePlayerId: string, blackPlayerId: string):void => {
         setGameId(gameId);
         setOtherPlayerId(otherPlayerId);
         setOtherPlayerName(otherPlayerName);
+        setWhitePlayerId(whitePlayerId);
+        setBlackPlayerId(blackPlayerId);
     }
+
+    
 
     useEffect(() => { 
         const interval = setInterval(() => {
@@ -156,11 +187,8 @@ const GameProcess = () => {
         .catch(error => console.error(error));
     }
 
-    
-
-    return (
-        <>
-            <h3> These are the available players: ----- Data from child: {gameId} {otherPlayerId} {otherPlayerName} </h3>
+    const ShowAvailablePlayers = () => {
+        return (
             <TableContainer>
                 <Table variant='simple'>
                     <Thead>
@@ -182,9 +210,18 @@ const GameProcess = () => {
                     
                 </Table>
             </TableContainer>
+        )
+    }
+
+    return (
+        <>
+            <h3> These are the available players: ----- 
+                Data from child: {gameId} {otherPlayerId} {otherPlayerName}
+                white player is: {whitePlayerId} black player is: {blackPlayerId} </h3>
+            <ShowAvailablePlayers />
             <h3> STATUS: {invitationProgress} </h3>
 
-            { invitationProgress === 1 && <MySentInvitations /> }
+            { invitationProgress === 1 && <MySentInvitations sendDataToParent={handleDataFromChild}/> }
 
             <MyInvitations sendDataToParent={handleDataFromChild}/>
 
