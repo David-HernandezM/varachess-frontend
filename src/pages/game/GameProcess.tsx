@@ -29,22 +29,40 @@ const MySentInvitations: React.FC<PropsMySentInvitations>  = ( {sendDataToParent
                 console.log("MY INVITATIONS: ");
                 console.log(data)
                 setMyArray(data);
-                if( data.length > 0){
-                    data.forEach( (r:string) => {
-                        if( r[5] == 'ACCEPTED' ) {
-                            console.log("~~~~The game has been accepted!!!");
-                            sendDataToParent(r[6], r[1], r[7], r[8],r[9])
-                        }
-                   })
-                }
-                
+                const myId : string = localStorage.playerID as string ;
 
+                if( data.length > 0){
+                    console.log("GOT SOMETHING GOOD IN MY INVITATIONS")
+                    //data.forEach( (r:string) => {
+                    //    console.log("r[5] says: " + r[5] +" ... " + typeof(r[5]))
+                    //    if( r[5] == 'ACCEPTED' ) {
+                    //        console.log("~~~~The game has been accepted!!!");
+                    //        sendDataToParent(r[6], r[1], r[7], r[8],r[9])
+                    //    }
+                    console.log("data[5] says: " + data[5] +" ... " + typeof(data[5]))
+                    const players = [data[1], data[2]];
+                    console.log("The players are: " + players.toString() )
+                    const otherPlayer = data[2]
+                    const otherPlayerName = data[7];
+                    console.log("The other player is " +otherPlayerName + " " + otherPlayer);
+                    const player_id_white = data[8];
+                    const player_id_black = data[9];
+                    const game_id = data[6];
+                    console.log("Player White: " + player_id_white)
+                    console.log("Player Black: " + player_id_black)
+                    console.log("Game Id: " + game_id)
+                    sendDataToParent(game_id, otherPlayer, otherPlayerName, player_id_white, player_id_black)
+
+
+
+                }
                 
             })
             .catch(error => console.error(error));
         }, 500);
     return () => clearInterval(interval);
     }, [])
+
     return (
         <>
         <h3> These are the sent invitations </h3>
@@ -103,7 +121,25 @@ const MyInvitations: React.FC<IsecondChildProps> = ({sendDataToParent}) => {
             .then(data => {
                 console.log("I AM BEEING INVITED TO: ");
                 console.log(data)
+                console.log("THIS IS THE FIRST ELEMENT: " + data[0].toString())
                 setMyArray(data);
+                data.forEach( (r:string[]) => {
+                    console.log("data[5] says: " + r[5] +" ... " + typeof(r[5]))
+                    if( r[5] === 'ACCEPTED'){
+                        const players = [r[1], r[2]];
+                        console.log("The players are: " + players.toString() )
+                        const otherPlayer = r[2]
+                        const otherPlayerName = r[7];
+                        console.log("The other player is " +otherPlayerName + " " + otherPlayer);
+                        const player_id_white = r[8];
+                        const player_id_black = r[9];
+                        const game_id = r[6];
+                        console.log("Player White: " + player_id_white)
+                        console.log("Player Black: " + player_id_black)
+                        console.log("Game Id: " + game_id)
+                        sendDataToParent(game_id, otherPlayer, otherPlayerName, player_id_white, player_id_black)
+                    }
+                });
 
                 
             })
@@ -154,6 +190,7 @@ const GameProcess = () => {
             fetch(`http://localhost:5000/listplayers`)
                     .then(response => response.json())
                     .then(data => {
+                        setInvitationProgress(1);
                         console.log("Called the list of players")
                         console.log(data);
                         // quitarme a mi mismo...
@@ -225,7 +262,7 @@ const GameProcess = () => {
 
             <MyInvitations sendDataToParent={handleDataFromChild}/>
 
-            {gameId !== '' && <ChessGame playerId={localStorage.playerID}  gameId={gameId}/>}
+            {gameId !== '' && <ChessGame playerId={localStorage.playerID}  gameId={gameId} whitePlayerId={whitePlayerId} blackPlayerId={blackPlayerId}/>}
         </>
     );
 }

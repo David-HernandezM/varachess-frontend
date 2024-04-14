@@ -17,9 +17,11 @@ const contra: contra_interface<string> = {
 interface Props {
     playerId: string;
     gameId: string;
+    whitePlayerId: string;
+    blackPlayerId: string;
   }
 
-const ChessGame : React.FC<Props> = ( {playerId, gameId}) => {
+const ChessGame : React.FC<Props> = ( {playerId, gameId,whitePlayerId,blackPlayerId}) => {
 
     const [fen, setFen] = useState('start');
     const [game, setGame] = useState(new Chess());
@@ -49,6 +51,12 @@ const ChessGame : React.FC<Props> = ( {playerId, gameId}) => {
 
     useEffect(() => {
         setTurno(game.turn());
+
+        if ( playerId == whitePlayerId){
+            setPlayerColor('w')
+        }else if(playerId == blackPlayerId) {
+            setPlayerColor('b')
+        }
         
         if(true){ 
         const interval = setInterval(() => {
@@ -262,7 +270,7 @@ const ChessGame : React.FC<Props> = ( {playerId, gameId}) => {
                 <h3> Threefold repetion: {threefoldState.toString()}</h3>
                 <h3> GameOver: {gameoverState.toString()} </h3>
                 <h3> Winner: {winner} </h3>
-            <RadioColorSelect />
+           
             <p> Player ID: {playerId} </p>
             <p> Game ID: {gameId} </p>
            
