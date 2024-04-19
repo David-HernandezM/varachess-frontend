@@ -260,7 +260,7 @@ const ChessGame : React.FC<Props> = ( {playerId, gameId,whitePlayerId,blackPlaye
                 onSquareClick={handlePieceClick}
             />
 
-            <h1> ({count}) TURN: {turno == 'w' ? 'WHITE' : 'BLACK'} IS NEXT (You are {playerColor} Player ID: {playerId} Game ID: {gameId})</h1>
+            <h1> TURN: {turno == 'w' ? 'WHITE' : 'BLACK'} IS NEXT (You are {playerColor} Player ID: {playerId} Game ID: {gameId})</h1>
             <h2> Game States:</h2>
                 <h3> Check: {checkState.toString()}</h3>
                 <h3> Checkmate: {checkmateState.toString()} </h3> 
@@ -275,7 +275,7 @@ const ChessGame : React.FC<Props> = ( {playerId, gameId,whitePlayerId,blackPlaye
             <p> Game ID: {gameId} </p>
            
             
-            <ResetGame />
+            
 
         </div>
     );
@@ -284,3 +284,4 @@ export { ChessGame };
 //  <input style={{ color: "blue" }} type='text' onChange={e => setPlayerId(e.target.value)} value={playerId} />
 
 //  <input style={{ color: "red" }} type='text' onChange={e => setGameId(e.target.value)} value={gameId} />
+// <ResetGame />

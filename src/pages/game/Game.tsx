@@ -20,8 +20,7 @@ function Game() {
         
       
         <HStack>
-          <PlayButton />
-          <EndButton />
+          
         </HStack>
       </VStack>
 
@@ -31,3 +30,5 @@ function Game() {
 }
 
 export { Game };
+// <PlayButton />
+   //       <EndButton />

@@ -15,7 +15,7 @@ import {
 } from '@chakra-ui/react'
 
 interface PropsMySentInvitations {
-    sendDataToParent: (arg: string, arg2:string, arg3:string, arg4:string, arg5:string) => void
+    sendDataToParent: (arg: string, arg2:string, arg3:string, arg4:string, arg5:string, arg6:number ) => void
 
 }
 
@@ -33,6 +33,7 @@ const MySentInvitations: React.FC<PropsMySentInvitations>  = ( {sendDataToParent
 
                 if( data.length > 0){
                     console.log("GOT SOMETHING GOOD IN MY INVITATIONS")
+                    
                     //data.forEach( (r:string) => {
                     //    console.log("r[5] says: " + r[5] +" ... " + typeof(r[5]))
                     //    if( r[5] == 'ACCEPTED' ) {
@@ -51,10 +52,16 @@ const MySentInvitations: React.FC<PropsMySentInvitations>  = ( {sendDataToParent
                     console.log("Player White: " + player_id_white)
                     console.log("Player Black: " + player_id_black)
                     console.log("Game Id: " + game_id)
-                    sendDataToParent(game_id, otherPlayer, otherPlayerName, player_id_white, player_id_black)
+                    if( game_id > 0 ){
+                        sendDataToParent(game_id, otherPlayer, otherPlayerName, player_id_white, player_id_black, 3)
+
+                    }
+                    
 
 
-
+                } else {
+                    
+                    sendDataToParent("", "", "", "", "", 0)
                 }
                 
             })
@@ -75,7 +82,7 @@ const MySentInvitations: React.FC<PropsMySentInvitations>  = ( {sendDataToParent
 
 
 interface Props {
-    sendDataToParent: (arg: string, arg2:string, arg3:string, arg4:string, arg5:string) => void
+    sendDataToParent: (arg: string, arg2:string, arg3:string, arg4:string, arg5:string, arg6:number) => void
     player_id_from: string;
     player_name_from: string;
     player_id_white: string;
@@ -94,7 +101,7 @@ interface Props {
             console.log("You tried to accept invitation, here is response: ");
             console.log(data);
             setGameId(data)
-            sendDataToParent(data, player_id_from, player_name_from,player_id_white, player_id_black )
+            sendDataToParent(data, player_id_from, player_name_from,player_id_white, player_id_black, 2 )
 
         })
         .catch(error => console.error(error));
@@ -107,7 +114,7 @@ interface Props {
   };
 
   interface IsecondChildProps {
-    sendDataToParent: (arg: string, arg2:string, arg3:string, arg4:string, arg5:string) => void
+    sendDataToParent: (arg: string, arg2:string, arg3:string, arg4:string, arg5:string, arg6: number) => void
   
   }
 
@@ -137,7 +144,7 @@ const MyInvitations: React.FC<IsecondChildProps> = ({sendDataToParent}) => {
                         console.log("Player White: " + player_id_white)
                         console.log("Player Black: " + player_id_black)
                         console.log("Game Id: " + game_id)
-                        sendDataToParent(game_id, otherPlayer, otherPlayerName, player_id_white, player_id_black)
+                        sendDataToParent(game_id, otherPlayer, otherPlayerName, player_id_white, player_id_black, 2)
                     }
                 });
 
@@ -157,12 +164,12 @@ const MyInvitations: React.FC<IsecondChildProps> = ({sendDataToParent}) => {
             <AcceptButton  sendDataToParent={sendDataToParent} player_id_from={item[1]} 
                         player_name_from={item[0]} player_id_white={item[5]} player_id_black={item[6]}/> </p>
         ))}
-        <button onClick={() => sendDataToParent('', '', '', '', '')} > JUST UPDATE PARRENT </button>
+        
         </>
     )
 }
 
-
+// <button onClick={() => sendDataToParent('', '', '', '', '')} > JUST UPDATE PARRENT </button>
 const GameProcess = () => {
     const [players, setPlayers] = useState<string[][]>([]);
     const [invitationProgress, setInvitationProgress] = useState<number>(0);
@@ -175,12 +182,16 @@ const GameProcess = () => {
 
 
     const handleDataFromChild = (gameId: string, otherPlayerId: string, otherPlayerName: string,
-                                whitePlayerId: string, blackPlayerId: string):void => {
+                                whitePlayerId: string, blackPlayerId: string, progress: number):void => {
         setGameId(gameId);
         setOtherPlayerId(otherPlayerId);
         setOtherPlayerName(otherPlayerName);
         setWhitePlayerId(whitePlayerId);
         setBlackPlayerId(blackPlayerId);
+        setInvitationProgress(progress);
+        if(gameId !== "" ) {
+            setInvitationProgress(3);
+        }
     }
 
     
@@ -190,7 +201,7 @@ const GameProcess = () => {
             fetch(`http://localhost:5000/listplayers`)
                     .then(response => response.json())
                     .then(data => {
-                        setInvitationProgress(1);
+                        // setInvitationProgress(1);
                         console.log("Called the list of players")
                         console.log(data);
                         // quitarme a mi mismo...
@@ -225,20 +236,32 @@ const GameProcess = () => {
     }
 
     const ShowAvailablePlayers = () => {
+        const disableButton = (val: string):boolean => {
+            console.log("hey I want to disable this thing... heres what i got " + val)
+            if (val === "AVAILABLE"){
+                console.log("going to send false");
+                return false;
+            }else {
+                console.log("going to send TRUE");
+                return true;
+            }
+        }
         return (
             <TableContainer>
                 <Table variant='simple'>
                     <Thead>
                         <Tr>
                             <Th>Players</Th>
-                            <Th>EXP</Th>
+                            <Th>ID </Th>
+                            <Th>STATUS </Th>
                         </Tr>
                     </Thead>
                     <Tbody>
                         {players.map((item, index) =>  ( 
                             <Tr>
-                            <Td > <Button  onClick={() => selectPlayer(item[2])} > {item[0]} </Button> </Td>
+                            <Td > <Button isDisabled={disableButton(item[3])} onClick={() => selectPlayer(item[2])} > {item[0]} </Button> </Td>
                             <Td>{item[2]}</Td>
+                            <Td>{item[3]}</Td>
                             </Tr>
                         ))}
                         
@@ -255,12 +278,12 @@ const GameProcess = () => {
             <h3> These are the available players: ----- 
                 Data from child: {gameId} {otherPlayerId} {otherPlayerName}
                 white player is: {whitePlayerId} black player is: {blackPlayerId} </h3>
-            <ShowAvailablePlayers />
+            { invitationProgress === 0  && <ShowAvailablePlayers /> }
             <h3> STATUS: {invitationProgress} </h3>
 
-            { invitationProgress === 1 && <MySentInvitations sendDataToParent={handleDataFromChild}/> }
+            { invitationProgress !== 3 &&  <MySentInvitations sendDataToParent={handleDataFromChild}/> }
 
-            <MyInvitations sendDataToParent={handleDataFromChild}/>
+            { invitationProgress !== 3 && <MyInvitations sendDataToParent={handleDataFromChild}/> }
 
             {gameId !== '' && <ChessGame playerId={localStorage.playerID}  gameId={gameId} whitePlayerId={whitePlayerId} blackPlayerId={blackPlayerId}/>}
         </>

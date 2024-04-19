@@ -95,10 +95,8 @@ function Home() {
   <VStack>
 
 
-  <h1> News and Updates   </h1>
-    <NewsItem />
-    <NewsItem />
-    <NewsItem />
+  <h1> Home   </h1>
+    
     
   </VStack>
   );
