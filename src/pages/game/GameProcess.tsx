@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useEffect } from 'react';
 import { ChessGame } from "./ChessGame";
 import {
@@ -13,6 +13,7 @@ import {
     TableContainer,
     Button,
 } from '@chakra-ui/react'
+import { stringCamelCase } from '@polkadot/util';
 
 
 
@@ -72,12 +73,57 @@ const MySentInvitations: React.FC<PropsMySentInvitations>  = ( {sendDataToParent
     return () => clearInterval(interval);
     }, [])
 
+    interface CancelProps {
+        player_id_from: string;
+        player_id_to: string;
+    }
+    const CancelButton : React.FC<CancelProps> = ({ player_id_from, player_id_to }) => {
+        const CancelInvitation = () =>{
+            console.log("You want to cancel invitation from " + player_id_from + " to " + player_id_to )
+            fetch(`http://localhost:5000/cancelinvitation/${player_id_from}/${player_id_to}`)
+                .then(response => response.json())
+                .then(data => {
+                    console.log("You tried to CANCEL your invitation, here is response: ");
+                    console.log(data);
+                    
+                })
+                .catch(error => console.error(error));
+        }
+        return (
+            <Button onClick={CancelInvitation} colorScheme='red' > Cancel </Button>
+        )
+    }
+
+    const Row = (item:string[]) => {
+        return (
+            <Tr> <Td> {item[7]} </Td>  
+            <Td> {item[5]}  </Td>
+            <Td> <CancelButton  player_id_from={ localStorage.playerID } player_id_to={ item[2] }  /> </Td>
+            </Tr>
+        )
+    }
+
+    // <p> {item[0]} {item[1]} {item[2]} {item[3]}  {item[4]} {item[5]} {item[6]} {item[7]} </p> 
+
     return (
         <>
         <h3> These are the sent invitations </h3>
+        <TableContainer>
+                <Table variant='simple'>
+                    <Thead>
+                        <Tr>
+                            <Th>Inviting Player</Th>
+                            <Th>Status </Th>
+                            <Th> Cancel </Th>
+                        </Tr>
+                    </Thead>
+                    <Tbody>
         {myArray.map((item, index) =>  ( 
-            <p> {item[0]} {item[1]} {item[2]} {item[3]}  {item[4]} {item[5]} {item[6]} {item[7]} </p> 
+            Row (item)
         ))}
+        </Tbody>
+        </Table>
+        </TableContainer>
         </>
     )
 }
@@ -110,7 +156,7 @@ interface Props {
     }
 
     return (
-        <Button onClick={acceptInvitation}>{player_name_from} / {player_id_from} </Button>
+        <Button onClick={acceptInvitation} colorScheme='teal' > Accept </Button>
 
     );
   };
@@ -156,16 +202,67 @@ const MyInvitations: React.FC<IsecondChildProps> = ({sendDataToParent}) => {
         }, 5000);
         return () => clearInterval(interval);
     }, [])
-    
+
+    interface DeclineProps {
+        player_id_from: string;
+        player_id_to: string;
+    }
+    const DeclineButton: React.FC <DeclineProps> = ( {player_id_from , player_id_to } ) =>{
+        const declineInvitation = () => {
+            console.log("Decline invitation from " + player_id_from + " to " + player_id_to)
+
+            fetch(`http://localhost:5000/acceptdeclineinvitation/${localStorage.playerID}/${player_id_from}/0`)
+                .then(response => response.json())
+                .then(data => {
+                    console.log("You tried to DECLINE the invitation, here is response: ");
+                    console.log(data);
+                    
+                })
+                .catch(error => console.error(error));
+        }
+        return ( 
+            <Button onClick={declineInvitation} colorScheme='red' > Decline </Button>
+        )
+    }
+    interface RowProp {
+        item : string[];
+    }
+    const Row : React.FC<RowProp> = ({item}) => {
+        return (
+            <Tr> <Td> {item[7]} </Td>  
+            <Td> <AcceptButton  sendDataToParent={sendDataToParent} player_id_from={item[1]} 
+                        player_name_from={item[0]} player_id_white={item[5]} player_id_black={item[6]}/> 
+            </Td>
+            <Td> <DeclineButton  player_id_from={item[1]} player_id_to={localStorage.playerID }  /> </Td>
+            </Tr>
+        )
+    }
 
     return (
         <>
         <h3> I AM BEEING INVITED TO:</h3>
+
+        <TableContainer>
+                <Table variant='simple'>
+                    <Thead>
+                        <Tr>
+                            <Th>Player Inviter</Th>
+                            <Th>Accept? </Th>
+                            <Th>Decline? </Th>
+                        </Tr>
+                    </Thead>
+                    <Tbody>
+
+                    
         {myArray.map((item, index) =>  ( 
-            <p>GAME_ID: {item[4]} {item[0]} {item[1]} {item[2]} {item[5]}  {item[6]} 
-            <AcceptButton  sendDataToParent={sendDataToParent} player_id_from={item[1]} 
-                        player_name_from={item[0]} player_id_white={item[5]} player_id_black={item[6]}/> </p>
+
+             item[5] == "WAITING" ? < Row item = {item} /> : " "
+            
         ))}
+
+        </Tbody>
+        </Table>
+        </TableContainer>
         
         </>
     )
@@ -342,6 +439,16 @@ const GameProcess = () => {
             setWhitePlayerId("");
             setBlackPlayerId("");
             setInvitationProgress(0);
+            setPlaying(true)
+
+            fetch(`http://localhost:5000/closegame/${gameId}`)
+            .then(response => response.json())
+            .then(data => {
+                console.log("CLOSE GAME status: ");
+                console.log(data)
+                
+            })
+            .catch(error => console.error(error));
 
         }
 
