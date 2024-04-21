@@ -14,6 +14,8 @@ import {
     Button,
 } from '@chakra-ui/react'
 
+
+
 interface PropsMySentInvitations {
     sendDataToParent: (arg: string, arg2:string, arg3:string, arg4:string, arg5:string, arg6:number ) => void
 
@@ -90,7 +92,7 @@ interface Props {
 
   }
   const AcceptButton: React.FC<Props> = ({sendDataToParent, player_id_from, player_name_from, player_id_white, player_id_black}) => {
-    const [gameid, setGameId] = useState<number>(0);
+    const [gameid, setGameId] = useState<string>("");
     const acceptInvitation = () => {
         console.log("You want to accept the invitation from  " + player_name_from)
 
@@ -102,7 +104,7 @@ interface Props {
             console.log(data);
             setGameId(data)
             sendDataToParent(data, player_id_from, player_name_from,player_id_white, player_id_black, 2 )
-
+            
         })
         .catch(error => console.error(error));
     }
@@ -173,12 +175,16 @@ const MyInvitations: React.FC<IsecondChildProps> = ({sendDataToParent}) => {
 const GameProcess = () => {
     const [players, setPlayers] = useState<string[][]>([]);
     const [invitationProgress, setInvitationProgress] = useState<number>(0);
-    const [gameId, setGameId] = useState("");
+    const [gameId, setGameId] = useState<string>("");
     const [otherPlayerId, setOtherPlayerId] = useState("");
     const [otherPlayerName, setOtherPlayerName] = useState("");
     const [whitePlayerId, setWhitePlayerId] = useState("");
     const [blackPlayerId, setBlackPlayerId] = useState("");
 
+    const [message, setMessage] = useState("Game in Progress");
+    const [playing, setPlaying] = useState<boolean>(true);
+
+    const [displayBoard, setDisplayBoard] = useState<boolean>(false);
 
 
     const handleDataFromChild = (gameId: string, otherPlayerId: string, otherPlayerName: string,
@@ -192,17 +198,38 @@ const GameProcess = () => {
         if(gameId !== "" ) {
             setInvitationProgress(3);
         }
+
     }
 
     
 
     useEffect(() => { 
         const interval = setInterval(() => {
-            fetch(`http://localhost:5000/listplayers`)
+            console.log("==================> GAMEID >>" + gameId + "<<")
+            
+            if( gameId !== '' ){
+                console.log("~~~~~GameId is set " + gameId)
+                setDisplayBoard(true)
+                   fetch(`http://localhost:5000/gamestatus/${gameId}`)
+                        .then(response => response.json())
+                        .then(data => {
+                                
+                            console.log("~~~~~~~~~~~~~~~~~~~~~~~~~~~~Getting game status:")
+                            console.log(data);
+                            setMessage( data[4] ); // place the status of the game on the message
+                            if( data[4] == "FORFEIT"){
+                                setPlaying(false)
+                                setMessage("FORFEIT")
+
+                            }
+                        })
+                        .catch(error  => console.error(error));
+            } else {
+                fetch(`http://localhost:5000/listplayers`)
                     .then(response => response.json())
                     .then(data => {
                         // setInvitationProgress(1);
-                        console.log("Called the list of players")
+                        console.log("---------------------Called the list of players")
                         console.log(data);
                         // quitarme a mi mismo...
                         let listPlayers: string[][] = [];
@@ -214,9 +241,14 @@ const GameProcess = () => {
                         setPlayers(listPlayers);
                     })
                     .catch(error => console.error(error));
-                }, 5000);
+
+            }
+
+
+
+            }, 1000);
             return () => clearInterval(interval);
-    }, [])
+    }, [gameId])
 
     const selectPlayer = (player_id: string) => {
         console.log("You have player ID" + localStorage.playerID + " with ID: " + player_id)
@@ -273,6 +305,49 @@ const GameProcess = () => {
         )
     }
 
+    const ForfeitGame = () => {
+
+        const handleClick = () => {
+            console.log("You want to cancel the game")
+            // /endgame/<game_id>/<player_id_won>/<player_id_lost>/<status>')
+            // invite?player_id_from=${localStorage.playerID}&player_id_to=${player_id} 
+            fetch(`http://localhost:5000/endgame/${gameId}/${otherPlayerId}/${localStorage.playerID}/2`)
+            .then(response => response.json())
+            .then(data => {
+                console.log("FORFEIT status: ");
+                console.log(data)
+                if (data===true){
+                    console.log("FORFEIT  successfuly ");
+                    setPlaying(false)
+                    
+                    
+                } else {
+                    console.log("FORFEIT  problem ");
+                }
+            })
+            .catch(error => console.error(error));
+        }
+        
+
+        return( <Button onClick = {handleClick}> Forfeit game</Button> )
+
+    }
+
+ 
+    const AcceptAndReset = () => {
+        const handleClick = () => {
+            setGameId("");
+            setOtherPlayerId("");
+            setOtherPlayerName("");
+            setWhitePlayerId("");
+            setBlackPlayerId("");
+            setInvitationProgress(0);
+
+        }
+
+        return( <Button onClick = {handleClick}> Accept </Button> )
+    }
+
     return (
         <>
             <h3> These are the available players: ----- 
@@ -285,9 +360,20 @@ const GameProcess = () => {
 
             { invitationProgress !== 3 && <MyInvitations sendDataToParent={handleDataFromChild}/> }
 
-            {gameId !== '' && <ChessGame playerId={localStorage.playerID}  gameId={gameId} whitePlayerId={whitePlayerId} blackPlayerId={blackPlayerId}/>}
+            {gameId !== '' && <h1> MESSAGE: {message} </h1> }
+
+            {gameId !== ''  && <ChessGame playerId={localStorage.playerID}  gameId={gameId} 
+                                        whitePlayerId={whitePlayerId} blackPlayerId={blackPlayerId} 
+                                        draggable= {playing} />}
+        
+            {gameId !== '' &&  <ForfeitGame /> }
+
+            {( gameId !== '' && playing === false) && <AcceptAndReset />}
+
+
         </>
     );
 }
 
 export { GameProcess };
+

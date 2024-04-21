@@ -19,9 +19,10 @@ interface Props {
     gameId: string;
     whitePlayerId: string;
     blackPlayerId: string;
+    draggable: boolean;
   }
 
-const ChessGame : React.FC<Props> = ( {playerId, gameId,whitePlayerId,blackPlayerId}) => {
+const ChessGame : React.FC<Props> = ( {playerId, gameId,whitePlayerId,blackPlayerId, draggable}) => {
 
     const [fen, setFen] = useState('start');
     const [game, setGame] = useState(new Chess());
@@ -47,19 +48,22 @@ const ChessGame : React.FC<Props> = ( {playerId, gameId,whitePlayerId,blackPlaye
 
     const [winner, setWinner] = useState<string>('None');
 
-    
+    const [orientation, setOrientation] = useState<"white" | "black" | undefined>("white");
 
     useEffect(() => {
         setTurno(game.turn());
 
         if ( playerId == whitePlayerId){
             setPlayerColor('w')
+            setOrientation("white");
         }else if(playerId == blackPlayerId) {
             setPlayerColor('b')
+            setOrientation("black");
         }
         
-        if(true){ 
+        
         const interval = setInterval(() => {
+
             // initial state fen : rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1
             const initFen = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
             const encodedInitFEN = encodeURI(initFen);
@@ -79,11 +83,11 @@ const ChessGame : React.FC<Props> = ( {playerId, gameId,whitePlayerId,blackPlaye
                     //if (data.turn == 'EMPTY' && fen !== 'r1k4r/p2nb1p1/2b4p/1p1n1p2/2PP4/3Q1NB1/1P3PPP/R5K1 b - - 0 19'){
                     if (data.turn !== 'EMPTY' ){
 
-                        if (data.fen.includes('b')) {
-                            setTurno('b')
-                        } else {
-                            setTurno('w')
-                        }
+                       // if (data.fen.includes('b')) {
+                        //    setTurno('b')
+                       // } else {
+                       //     setTurno('w')
+                       //  }
     
                         setGame( new Chess(data.fen) )
                         setFen(game.fen())
@@ -119,10 +123,10 @@ const ChessGame : React.FC<Props> = ( {playerId, gameId,whitePlayerId,blackPlaye
             }
 
 
-        }, 500);
+        }, 1000);
 
         return () => clearInterval(interval);
-        }
+        
         
 
     })
@@ -255,9 +259,10 @@ const ChessGame : React.FC<Props> = ( {playerId, gameId,whitePlayerId,blackPlaye
                 onDrop={(move) => handleMove(move)}
                 dropSquareStyle={{ boxShadow: 'inset 0 0 1px 4px #8F8' }}
                 sparePieces={false}
-                draggable={true}
+                draggable={draggable}
                 onMouseOutSquare={handleSnapEnd}
                 onSquareClick={handlePieceClick}
+                orientation={orientation}
             />
 
             <h1> TURN: {turno == 'w' ? 'WHITE' : 'BLACK'} IS NEXT (You are {playerColor} Player ID: {playerId} Game ID: {gameId})</h1>
@@ -269,7 +274,7 @@ const ChessGame : React.FC<Props> = ( {playerId, gameId,whitePlayerId,blackPlaye
                 <h3> StaleMate: {stalemateState.toString()}</h3>
                 <h3> Threefold repetion: {threefoldState.toString()}</h3>
                 <h3> GameOver: {gameoverState.toString()} </h3>
-                <h3> Winner: {winner} </h3>
+                <h3> Winner: {winner}</h3>
            
             <p> Player ID: {playerId} </p>
             <p> Game ID: {gameId} </p>
