@@ -80,7 +80,7 @@ const MySentInvitations: React.FC<PropsMySentInvitations>  = ( {sendDataToParent
     const CancelButton : React.FC<CancelProps> = ({ player_id_from, player_id_to }) => {
         const CancelInvitation = () =>{
             console.log("You want to cancel invitation from " + player_id_from + " to " + player_id_to )
-            fetch(`http://localhost:5000/acceptdeclineinvitation/${player_id_to}/${player_id_from}/0`)
+            fetch(`http://localhost:5000/cancelinvitation/${player_id_from}/${player_id_to}`)
                 .then(response => response.json())
                 .then(data => {
                     console.log("You tried to CANCEL your invitation, here is response: ");
@@ -177,7 +177,7 @@ const MyInvitations: React.FC<IsecondChildProps> = ({sendDataToParent}) => {
                 console.log("I AM BEEING INVITED TO: ");
                 console.log(data)
                 console.log("THIS IS THE FIRST ELEMENT: " + data[0].toString())
-                setMyArray([ ... data ]);
+                setMyArray(data);
                 data.forEach( (r:string[]) => {
                     console.log("data[5] says: " + r[5] +" ... " + typeof(r[5]))
                     if( r[5] === 'ACCEPTED'){
@@ -201,7 +201,7 @@ const MyInvitations: React.FC<IsecondChildProps> = ({sendDataToParent}) => {
             .catch(error => console.error(error));
         }, 500);
         return () => clearInterval(interval);
-    }, [myArray])
+    }, [])
 
     interface DeclineProps {
         player_id_from: string;
@@ -216,7 +216,6 @@ const MyInvitations: React.FC<IsecondChildProps> = ({sendDataToParent}) => {
                 .then(data => {
                     console.log("You tried to DECLINE the invitation, here is response: ");
                     console.log(data);
-                    setMyArray(myArray);
                     
                 })
                 .catch(error => console.error(error));
@@ -230,7 +229,7 @@ const MyInvitations: React.FC<IsecondChildProps> = ({sendDataToParent}) => {
     }
     const Row : React.FC<RowProp> = ({item}) => {
         return (
-            <Tr> <Td> {item[7]} - {item[5]} </Td>  
+            <Tr> <Td> {item[7]} </Td>  
             <Td> <AcceptButton  sendDataToParent={sendDataToParent} player_id_from={item[1]} 
                         player_name_from={item[0]} player_id_white={item[5]} player_id_black={item[6]}/> 
             </Td>
@@ -257,7 +256,13 @@ const MyInvitations: React.FC<IsecondChildProps> = ({sendDataToParent}) => {
                     
         {myArray.map((item) =>  ( 
 
-            item[5] !== "DECLINED" ? <Row item={item} /> : ""
+            <Tr> <Td> {item[7]} </Td>  
+            <Td> <AcceptButton  sendDataToParent={sendDataToParent} player_id_from={item[1]} 
+                        player_name_from={item[0]} player_id_white={item[5]} player_id_black={item[6]}/> 
+            </Td>
+            <Td> <DeclineButton  player_id_from={item[1]} player_id_to={localStorage.playerID }  /> </Td>
+            </Tr>
+            
         ))}
 
         </Tbody>
