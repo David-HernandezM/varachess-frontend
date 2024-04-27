@@ -59,12 +59,16 @@ const MySentInvitations: React.FC<PropsMySentInvitations>  = ( {sendDataToParent
                         sendDataToParent(game_id, otherPlayer, otherPlayerName, player_id_white, player_id_black, 3)
 
                     }
+
+                    // check if they are declined...
+
+                    
                     
 
 
                 } else {
                     
-                    sendDataToParent("", "", "", "", "", 0)
+                   sendDataToParent("", "", "", "", "", 0)
                 }
                 
             })
@@ -74,17 +78,18 @@ const MySentInvitations: React.FC<PropsMySentInvitations>  = ( {sendDataToParent
     }, [])
 
     interface CancelProps {
-        player_id_from: string;
-        player_id_to: string;
+        invitation_id: string;
+        
     }
-    const CancelButton : React.FC<CancelProps> = ({ player_id_from, player_id_to }) => {
+    const CancelButton : React.FC<CancelProps> = ({ invitation_id }) => {
         const CancelInvitation = () =>{
-            console.log("You want to cancel invitation from " + player_id_from + " to " + player_id_to )
-            fetch(`http://localhost:5000/acceptdeclineinvitation/${player_id_to}/${player_id_from}/0`)
+            console.log("You want to cancel invitation with this id" + invitation_id  )
+            fetch(`http://localhost:5000/acceptdeclineinvitation/${invitation_id}/0`)
                 .then(response => response.json())
                 .then(data => {
                     console.log("You tried to CANCEL your invitation, here is response: ");
                     console.log(data);
+                    sendDataToParent("", "", "", "", "", 0)
                     
                 })
                 .catch(error => console.error(error));
@@ -98,7 +103,7 @@ const MySentInvitations: React.FC<PropsMySentInvitations>  = ( {sendDataToParent
         return (
             <Tr> <Td> {item[7]} </Td>  
             <Td> {item[5]}  </Td>
-            <Td> <CancelButton  player_id_from={ localStorage.playerID } player_id_to={ item[2] }  /> </Td>
+            <Td> <CancelButton  invitation_id={ item[0] }  /> </Td>
             </Tr>
         )
     }
@@ -119,7 +124,7 @@ const MySentInvitations: React.FC<PropsMySentInvitations>  = ( {sendDataToParent
                     </Thead>
                     <Tbody>
         {myArray.map((item, index) =>  ( 
-            Row (item)
+            item[5] !== "DECLINED" ? Row (item) : ""
         ))}
         </Tbody>
         </Table>
@@ -135,18 +140,19 @@ interface Props {
     player_name_from: string;
     player_id_white: string;
     player_id_black: string;
+    invitation_id: string;
 
   }
-  const AcceptButton: React.FC<Props> = ({sendDataToParent, player_id_from, player_name_from, player_id_white, player_id_black}) => {
+  const AcceptButton: React.FC<Props> = ({sendDataToParent, player_id_from, player_name_from, player_id_white, player_id_black, invitation_id}) => {
     const [gameid, setGameId] = useState<string>("");
     const acceptInvitation = () => {
         console.log("You want to accept the invitation from  " + player_name_from)
 
 
-        fetch(`http://localhost:5000/acceptdeclineinvitation/${localStorage.playerID}/${player_id_from}/1`)
+        fetch(`http://localhost:5000/acceptdeclineinvitation/${invitation_id}/1`)
         .then(response => response.json())
         .then(data => {
-            console.log("You tried to accept invitation, here is response: ");
+            console.log("You tried to accept invitation, here is response: " + data);
             console.log(data);
             setGameId(data)
             sendDataToParent(data, player_id_from, player_name_from,player_id_white, player_id_black, 2 )
@@ -176,7 +182,7 @@ const MyInvitations: React.FC<IsecondChildProps> = ({sendDataToParent}) => {
             .then(data => {
                 console.log("I AM BEEING INVITED TO: ");
                 console.log(data)
-                console.log("THIS IS THE FIRST ELEMENT: " + data[0].toString())
+                console.log("THIS IS THE FIRST ELEMENT: " + data[0])
                 setMyArray([ ... data ]);
                 data.forEach( (r:string[]) => {
                     console.log("data[5] says: " + r[5] +" ... " + typeof(r[5]))
@@ -204,14 +210,14 @@ const MyInvitations: React.FC<IsecondChildProps> = ({sendDataToParent}) => {
     }, [myArray])
 
     interface DeclineProps {
-        player_id_from: string;
-        player_id_to: string;
+        invitation_id: string;
+        
     }
-    const DeclineButton: React.FC <DeclineProps> = ( {player_id_from , player_id_to } ) =>{
+    const DeclineButton: React.FC <DeclineProps> = ( {invitation_id  } ) =>{
         const declineInvitation = () => {
-            console.log("Decline invitation from " + player_id_from + " to " + player_id_to)
+            console.log("Decline invitation with id " + invitation_id)
 
-            fetch(`http://localhost:5000/acceptdeclineinvitation/${localStorage.playerID}/${player_id_from}/0`)
+            fetch(`http://localhost:5000/acceptdeclineinvitation/${invitation_id}/0`)
                 .then(response => response.json())
                 .then(data => {
                     console.log("You tried to DECLINE the invitation, here is response: ");
@@ -220,6 +226,8 @@ const MyInvitations: React.FC<IsecondChildProps> = ({sendDataToParent}) => {
                     
                 })
                 .catch(error => console.error(error));
+
+                sendDataToParent("", "", "", "", "", 0)
         }
         return ( 
             <Button onClick={declineInvitation} colorScheme='red' > Decline </Button>
@@ -232,9 +240,10 @@ const MyInvitations: React.FC<IsecondChildProps> = ({sendDataToParent}) => {
         return (
             <Tr> <Td> {item[7]} - {item[5]} </Td>  
             <Td> <AcceptButton  sendDataToParent={sendDataToParent} player_id_from={item[1]} 
-                        player_name_from={item[0]} player_id_white={item[5]} player_id_black={item[6]}/> 
+                        player_name_from={item[7]} player_id_white={item[5]} player_id_black={item[6]}
+                        invitation_id={item[0]}/> 
             </Td>
-            <Td> <DeclineButton  player_id_from={item[1]} player_id_to={localStorage.playerID }  /> </Td>
+            <Td> <DeclineButton  invitation_id={item[0]}  /> </Td>
             </Tr>
         )
     }
@@ -283,6 +292,11 @@ const GameProcess = () => {
 
     const [displayBoard, setDisplayBoard] = useState<boolean>(false);
 
+    const [gameState, setGameState] = useState<string>("");
+
+    const [playerWinner, setPlayerWinner] = useState<string>("");
+    const [playerLoser, setPlayerLoser] = useState<string>("");
+
 
     const handleDataFromChild = (gameId: string, otherPlayerId: string, otherPlayerName: string,
                                 whitePlayerId: string, blackPlayerId: string, progress: number):void => {
@@ -301,6 +315,19 @@ const GameProcess = () => {
     
 
     useEffect(() => { 
+
+        setGameState("NO GAME")
+        setPlayerWinner("UNDETERMINED")
+        setPlayerLoser("UNDETERMINED")
+
+
+        if( gameState == 'GAME WON' ) {
+
+        } else if ( gameState == 'GAME LOST') {
+            
+        }
+
+
         const interval = setInterval(() => {
             console.log("==================> GAMEID >>" + gameId + "<<")
             
@@ -338,7 +365,22 @@ const GameProcess = () => {
                         setPlayers(listPlayers);
                     })
                     .catch(error => console.error(error));
+                fetch(`http://localhost:5000/checkifingame/${localStorage.playerID}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        // setInvitationProgress(1);
+                        console.log("/////// am I in a game???")
+                        console.log(data);
+                        if ( data.length > 0 )
+                            setGameId(data[0]);
+                            setWhitePlayerId(data[8]);
+                            setBlackPlayerId(data[9]);
+                            setMessage(data[4])
 
+                    })
+                    .catch(error => console.error(error));
+
+                
             }
 
 
@@ -441,6 +483,10 @@ const GameProcess = () => {
             setInvitationProgress(0);
             setPlaying(true)
 
+            setGameState("NO GAME")
+            setPlayerWinner("UNDETERMINED")
+            setPlayerLoser("UNDETERMINED")
+
             fetch(`http://localhost:5000/closegame/${gameId}`)
             .then(response => response.json())
             .then(data => {
@@ -455,6 +501,14 @@ const GameProcess = () => {
         return( <Button onClick = {handleClick}> Accept </Button> )
     }
 
+
+    const handleBoardState = (playing: boolean, gameState: string, playerWinner: string, playerLoser: string) => {
+        setPlaying(playing)
+        setGameState(gameState)
+        setPlayerWinner(playerWinner)
+        setPlayerLoser(playerLoser)
+    }
+
     return (
         <>
             <h3> These are the available players: ----- 
@@ -467,11 +521,11 @@ const GameProcess = () => {
 
             { invitationProgress !== 3 && <MyInvitations sendDataToParent={handleDataFromChild}/> }
 
-            {gameId !== '' && <h1> MESSAGE: {message} </h1> }
+            {gameId !== '' && <h1> MESSAGE: {message} / {gameState} / WINS: {playerWinner} LOSES: {playerLoser} </h1> }
 
             {gameId !== ''  && <ChessGame playerId={localStorage.playerID}  gameId={gameId} 
                                         whitePlayerId={whitePlayerId} blackPlayerId={blackPlayerId} 
-                                        draggable= {playing} />}
+                                        draggable= {playing}  handleBoardState={handleBoardState}/>}
         
             {gameId !== '' &&  <ForfeitGame /> }
 

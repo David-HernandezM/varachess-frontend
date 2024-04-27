@@ -20,9 +20,10 @@ interface Props {
     whitePlayerId: string;
     blackPlayerId: string;
     draggable: boolean;
+    handleBoardState: (arg1:boolean, arg2:string, arg3:string, arg4:string)=>void;
   }
 
-const ChessGame : React.FC<Props> = ( {playerId, gameId,whitePlayerId,blackPlayerId, draggable}) => {
+const ChessGame : React.FC<Props> = ( {playerId, gameId,whitePlayerId,blackPlayerId, draggable, handleBoardState}) => {
 
     const [fen, setFen] = useState('start');
     const [game, setGame] = useState(new Chess());
@@ -60,7 +61,26 @@ const ChessGame : React.FC<Props> = ( {playerId, gameId,whitePlayerId,blackPlaye
             setPlayerColor('b')
             setOrientation("black");
         }
+
+        if( gameoverState === true ) {
+            if ( turno === 'w') {
+                setWinner('b');
+                handleBoardState(false, "FINISHED", blackPlayerId, whitePlayerId)
+            } else {
+                setWinner('w');
+                handleBoardState(false, "FINISHED", whitePlayerId, blackPlayerId )
+
+            }
+            
+            
+        }else {
+            setWinner('None');
+            
+            handleBoardState(true, "INPROGRESS", "UNDETERMINED", "UNDETERMINED")
+
+        }
         
+        //handleBoardState(true, "INPROGRESS", "UNDETERMINED", "UNDETERMINED")
         
         const interval = setInterval(() => {
 
@@ -111,16 +131,7 @@ const ChessGame : React.FC<Props> = ( {playerId, gameId,whitePlayerId,blackPlaye
             setThreefoldState(game.isThreefoldRepetition());
             setGameoverState(game.isGameOver());
 
-            if( gameoverState === true ) {
-                if ( turno === 'w') {
-                    setWinner('b');
-                } else {
-                    setWinner('w');
-                }
-            }else {
-                setWinner('None');
- 
-            }
+            
 
 
         }, 1000);
