@@ -76,7 +76,7 @@ const ChessGame : React.FC<Props> = ( {playerId, gameId,whitePlayerId,blackPlaye
         }else {
             setWinner('None');
             
-            handleBoardState(true, "INPROGRESS", "UNDETERMINED", "UNDETERMINED")
+            //handleBoardState(true, "INPROGRESS", "UNDETERMINED", "UNDETERMINED")
 
         }
         

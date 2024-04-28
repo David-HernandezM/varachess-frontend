@@ -15,28 +15,7 @@ import {
 } from '@chakra-ui/react'
 import { stringCamelCase } from '@polkadot/util';
 
-interface CancelProps {
-    invitation_id: string;
-    sendDataToParent: (arg: string, arg2:string, arg3:string, arg4:string, arg5:string, arg6:number ) => void
 
-}
-const CancelButton : React.FC<CancelProps> = ({ invitation_id, sendDataToParent }) => {
-    const CancelInvitation = () =>{
-        console.log("You want to cancel invitation with this id" + invitation_id  )
-        fetch(`http://localhost:5000/acceptdeclineinvitation/${invitation_id}/0`)
-            .then(response => response.json())
-            .then(data => {
-                console.log("You tried to CANCEL your invitation, here is response: ");
-                console.log(data);
-                sendDataToParent("", "", "", "", "", 0)
-                
-            })
-            .catch(error => console.error(error));
-    }
-    return (
-        <Button onClick={CancelInvitation} colorScheme='red' > Cancel </Button>
-    )
-}
 
 interface PropsMySentInvitations {
     sendDataToParent: (arg: string, arg2:string, arg3:string, arg4:string, arg5:string, arg6:number ) => void
@@ -98,13 +77,33 @@ const MySentInvitations: React.FC<PropsMySentInvitations>  = ( {sendDataToParent
     return () => clearInterval(interval);
     }, [])
 
-    
+    interface CancelProps {
+        invitation_id: string;
+        
+    }
+    const CancelButton : React.FC<CancelProps> = ({ invitation_id }) => {
+        const CancelInvitation = () =>{
+            console.log("You want to cancel invitation with this id" + invitation_id  )
+            fetch(`http://localhost:5000/acceptdeclineinvitation/${invitation_id}/0`)
+                .then(response => response.json())
+                .then(data => {
+                    console.log("You tried to CANCEL your invitation, here is response: ");
+                    console.log(data);
+                    sendDataToParent("", "", "", "", "", 0)
+                    
+                })
+                .catch(error => console.error(error));
+        }
+        return (
+            <Button onClick={CancelInvitation} colorScheme='red' > Cancel </Button>
+        )
+    }
 
     const Row = (item:string[]) => {
         return (
             <Tr> <Td> {item[7]} </Td>  
             <Td> {item[5]}  </Td>
-            <Td> <CancelButton  invitation_id={ item[0] } sendDataToParent={sendDataToParent} /> </Td>
+            <Td> <CancelButton  invitation_id={ item[0] }  /> </Td>
             </Tr>
         )
     }
@@ -168,32 +167,6 @@ interface Props {
     );
   };
 
-  interface DeclineProps {
-    invitation_id: string;
-    sendDataToParent: (arg: string, arg2:string, arg3:string, arg4:string, arg5:string, arg6:number) => void
-    
-}
-const DeclineButton: React.FC <DeclineProps> = ( {sendDataToParent, invitation_id  } ) =>{
-    const declineInvitation = () => {
-        console.log("Decline invitation with id " + invitation_id)
-
-        fetch(`http://localhost:5000/acceptdeclineinvitation/${invitation_id}/0`)
-            .then(response => response.json())
-            .then(data => {
-                console.log("You tried to DECLINE the invitation, here is response: ");
-                console.log(data);
-                
-                
-            })
-            .catch(error => console.error(error));
-
-            sendDataToParent("", "", "", "", "", 0)
-    }
-    return ( 
-        <Button onClick={declineInvitation} colorScheme='red' > Decline </Button>
-  )
-}
-
   interface IsecondChildProps {
     sendDataToParent: (arg: string, arg2:string, arg3:string, arg4:string, arg5:string, arg6: number) => void
   
@@ -236,7 +209,30 @@ const MyInvitations: React.FC<IsecondChildProps> = ({sendDataToParent}) => {
         return () => clearInterval(interval);
     }, [myArray])
 
-    
+    interface DeclineProps {
+        invitation_id: string;
+        
+    }
+    const DeclineButton: React.FC <DeclineProps> = ( {invitation_id  } ) =>{
+        const declineInvitation = () => {
+            console.log("Decline invitation with id " + invitation_id)
+
+            fetch(`http://localhost:5000/acceptdeclineinvitation/${invitation_id}/0`)
+                .then(response => response.json())
+                .then(data => {
+                    console.log("You tried to DECLINE the invitation, here is response: ");
+                    console.log(data);
+                    setMyArray(myArray);
+                    
+                })
+                .catch(error => console.error(error));
+
+                sendDataToParent("", "", "", "", "", 0)
+        }
+        return ( 
+            <Button onClick={declineInvitation} colorScheme='red' > Decline </Button>
+        )
+    }
     interface RowProp {
         item : string[];
     }
@@ -247,7 +243,7 @@ const MyInvitations: React.FC<IsecondChildProps> = ({sendDataToParent}) => {
                         player_name_from={item[7]} player_id_white={item[8]} player_id_black={item[9]}
                         invitation_id={item[0]}/> 
             </Td>
-            <Td> <DeclineButton sendDataToParent={sendDataToParent} invitation_id={item[0]} /></Td>
+            <Td> <DeclineButton  invitation_id={item[0]}  /> </Td>
             </Tr>
         )
     }
@@ -269,8 +265,8 @@ const MyInvitations: React.FC<IsecondChildProps> = ({sendDataToParent}) => {
 
                     
         {myArray.map((item) =>  ( 
-            
-            item[5] == 'WAITING' ? Row ({item}) : ""
+
+            item[5] !== "DECLINED" ? <Row item={item} /> : ""
         ))}
 
         </Tbody>
@@ -280,41 +276,6 @@ const MyInvitations: React.FC<IsecondChildProps> = ({sendDataToParent}) => {
         </>
     )
 }
-
-interface ForfeitProps {
-    parentFunction: (playing: boolean) => void;
-    gameId: string;
-    otherPlayerId: string;
-}
-
-const ForfeitGame: React.FC<ForfeitProps> = ({parentFunction, gameId, otherPlayerId}) => {
-
-    const handleClick = () => {
-        console.log("You want to cancel the game")
-        // /endgame/<game_id>/<player_id_won>/<player_id_lost>/<status>')
-        // invite?player_id_from=${localStorage.playerID}&player_id_to=${player_id} 
-        fetch(`http://localhost:5000/endgame/${gameId}/${otherPlayerId}/${localStorage.playerID}/2`)
-        .then(response => response.json())
-        .then(data => {
-            console.log("FORFEIT status: ");
-            console.log(data)
-            if (data===true){
-                console.log("FORFEIT  successfuly ");
-                parentFunction(false)     //instead of setPlaying(false)
-                
-                
-            } else {
-                console.log("FORFEIT  problem ");
-            }
-        })
-        .catch(error => console.error(error));
-    }
-    
-
-    return( <Button onClick = {handleClick}> Forfeit game</Button> )
-
-}
-
 
 // <button onClick={() => sendDataToParent('', '', '', '', '')} > JUST UPDATE PARRENT </button>
 const GameProcess = () => {
@@ -491,7 +452,33 @@ const GameProcess = () => {
         )
     }
 
-    
+    const ForfeitGame = () => {
+
+        const handleClick = () => {
+            console.log("You want to cancel the game")
+            // /endgame/<game_id>/<player_id_won>/<player_id_lost>/<status>')
+            // invite?player_id_from=${localStorage.playerID}&player_id_to=${player_id} 
+            fetch(`http://localhost:5000/endgame/${gameId}/${otherPlayerId}/${localStorage.playerID}/2`)
+            .then(response => response.json())
+            .then(data => {
+                console.log("FORFEIT status: ");
+                console.log(data)
+                if (data===true){
+                    console.log("FORFEIT  successfuly ");
+                    setPlaying(false)
+                    
+                    
+                } else {
+                    console.log("FORFEIT  problem ");
+                }
+            })
+            .catch(error => console.error(error));
+        }
+        
+
+        return( <Button onClick = {handleClick}> Forfeit game</Button> )
+
+    }
 
  
     const AcceptAndReset = () => {
@@ -530,18 +517,11 @@ const GameProcess = () => {
         setPlayerLoser(playerLoser)
     }
 
-    const parentForfeitFunction = (playing: boolean) => {
-        setPlaying(playing)
-    }
-
-    
-
     return (
         <>
             <h3> These are the available players: ----- 
                 Data from child: {gameId} {otherPlayerId} {otherPlayerName}
                 white player is: {whitePlayerId} black player is: {blackPlayerId} </h3>
-                <h3> Playing Boolean: {playing.toString()}</h3>
             { invitationProgress === 0  && <ShowAvailablePlayers /> }
             <h3> STATUS: {invitationProgress} </h3>
 
@@ -555,9 +535,9 @@ const GameProcess = () => {
                                         whitePlayerId={whitePlayerId} blackPlayerId={blackPlayerId} 
                                         draggable= {playing}  handleBoardState={handleBoardState}/>}
         
-            {(gameId !== '' && playing === true) && <ForfeitGame parentFunction={parentForfeitFunction} gameId={gameId} otherPlayerId={otherPlayerId}/> }
+            {(gameId !== '' && playing === true ) && <ForfeitGame /> }
 
-            {( gameId !== '' && playing === false)  && <AcceptAndReset />}
+            {( gameId !== '' && playing === false) && <AcceptAndReset />}
 
 
         </>
@@ -565,5 +545,4 @@ const GameProcess = () => {
 }
 
 export { GameProcess };
-
 
