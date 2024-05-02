@@ -314,7 +314,49 @@ const ForfeitGame: React.FC<ForfeitProps> = ({parentFunction, gameId, otherPlaye
     return( <Button onClick = {handleClick}> Forfeit game</Button> )
 
 }
+interface ShowAvailablePlayersProps {
+    players: string[][];
+    parentSelectPlayer: (arg1: string) => void;
+}
 
+
+const ShowAvailablePlayers:React.FC<ShowAvailablePlayersProps> = ({players, parentSelectPlayer}) => {
+    const disableButton = (val: string):boolean => {
+        console.log("hey I want to disable this thing... heres what i got " + val)
+        if (val === "AVAILABLE"){
+            console.log("going to send false");
+            return false;
+        }else {
+            console.log("going to send TRUE");
+            return true;
+        }
+    }
+    return (
+        <TableContainer>
+            <Table variant='simple'>
+                <Thead>
+                    <Tr>
+                        <Th>Players</Th>
+                        <Th>ID </Th>
+                        <Th>STATUS </Th>
+                    </Tr>
+                </Thead>
+                <Tbody>
+                    {players.map((item) =>  ( 
+                        <Tr>
+                        <Td > <Button isDisabled={disableButton(item[3])} onClick={() => parentSelectPlayer(item[2])} > {item[0]} </Button> </Td>
+                        <Td>{item[2]}</Td>
+                        <Td>{item[3]}</Td>
+                        </Tr>
+                    ))}
+                    
+                    
+                </Tbody>
+                
+            </Table>
+        </TableContainer>
+    )
+}
 
 // <button onClick={() => sendDataToParent('', '', '', '', '')} > JUST UPDATE PARRENT </button>
 const GameProcess = () => {
@@ -453,43 +495,7 @@ const GameProcess = () => {
         .catch(error => console.error(error));
     }
 
-    const ShowAvailablePlayers = () => {
-        const disableButton = (val: string):boolean => {
-            console.log("hey I want to disable this thing... heres what i got " + val)
-            if (val === "AVAILABLE"){
-                console.log("going to send false");
-                return false;
-            }else {
-                console.log("going to send TRUE");
-                return true;
-            }
-        }
-        return (
-            <TableContainer>
-                <Table variant='simple'>
-                    <Thead>
-                        <Tr>
-                            <Th>Players</Th>
-                            <Th>ID </Th>
-                            <Th>STATUS </Th>
-                        </Tr>
-                    </Thead>
-                    <Tbody>
-                        {players.map((item, index) =>  ( 
-                            <Tr>
-                            <Td > <Button isDisabled={disableButton(item[3])} onClick={() => selectPlayer(item[2])} > {item[0]} </Button> </Td>
-                            <Td>{item[2]}</Td>
-                            <Td>{item[3]}</Td>
-                            </Tr>
-                        ))}
-                        
-                        
-                    </Tbody>
-                    
-                </Table>
-            </TableContainer>
-        )
-    }
+    
 
     
 
@@ -534,7 +540,9 @@ const GameProcess = () => {
         setPlaying(playing)
     }
 
-    
+    const parentSelectPlayer = (player: string) => {
+        selectPlayer(player)
+    }
 
     return (
         <>
@@ -542,7 +550,7 @@ const GameProcess = () => {
                 Data from child: {gameId} {otherPlayerId} {otherPlayerName}
                 white player is: {whitePlayerId} black player is: {blackPlayerId} </h3>
                 <h3> Playing Boolean: {playing.toString()}</h3>
-            { invitationProgress === 0  && <ShowAvailablePlayers /> }
+            { invitationProgress === 0  && <ShowAvailablePlayers players={players} parentSelectPlayer={parentSelectPlayer} /> }
             <h3> STATUS: {invitationProgress} </h3>
 
             { invitationProgress !== 3 &&  <MySentInvitations sendDataToParent={handleDataFromChild}/> }
