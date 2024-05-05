@@ -18,6 +18,7 @@ function Accounts({ list, onChange }: Props) {
     login(account);
     localStorage.setItem(LOCAL_STORAGE.ACCOUNT, account.address);
     localStorage.setItem('namewallet', account.meta.name as string);
+    localStorage.setItem('addresswallet', account.address as string)
     onChange();
   };
 

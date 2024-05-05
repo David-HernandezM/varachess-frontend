@@ -43,10 +43,12 @@ function Account() {
   return (
     <>
       {account ? (
-        <Wallet balance={account.balance} address={account.address} name={account.meta.name} onClick={openModal} />
+         <Wallet balance={account.balance} address={account.address} name={account.meta.name} onClick={openModal} />
+      
       ) : (
         <button type="button" onClick={openModal}> Connect Your Wallet</button>
       )}
+      
       {isModalOpen && <AccountsModal accounts={accounts} close={closeModal} />}
     </>
   );
