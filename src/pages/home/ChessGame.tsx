@@ -274,6 +274,10 @@ const ChessGame : React.FC<Props> = ( {playerId, gameId,whitePlayerId,blackPlaye
                 onMouseOutSquare={handleSnapEnd}
                 onSquareClick={handlePieceClick}
                 orientation={orientation}
+                lightSquareStyle={{ backgroundColor: "#dbebce" }}
+                darkSquareStyle={{ backgroundColor: "#4aad86" }}  //7c323d
+
+
             />
 
             <h1> TURN: {turno == 'w' ? 'WHITE' : 'BLACK'} IS NEXT (You are {playerColor} Player ID: {playerId} Game ID: {gameId})</h1>

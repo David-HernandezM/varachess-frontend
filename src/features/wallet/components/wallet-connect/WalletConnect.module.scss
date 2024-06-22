@@ -19,6 +19,8 @@
     padding-right: 20px;
     padding-left: 24px;
     justify-content: space-between;
+    background-color: #9adeeb;
+    color:rgba(0, 0, 0, 0.5);
 
     &:hover {
       & .statusAccounts {
@@ -38,7 +40,7 @@
 
     .icon {
       margin-right: 8px;
-      background-color: #fff;
+      background-color: #9adeeb;
       border-radius: 50%;
       border: 1px solid #ebeeee;
     }
@@ -54,7 +56,7 @@
     font-weight: 600;
     font-size: 12px;
     line-height: 12px;
-    color: #a2a2a2;
+    color: #493131;
   }
 
   &Accounts {
@@ -83,6 +85,7 @@
     padding-left: 24px;
     font-weight: 600;
     font-size: 16px;
+    background-color: #00b387;
 
     span {
       display: block;
@@ -106,7 +109,7 @@
     @include gap(8px, right);
     display: flex;
     align-items: center;
-    background-color: transparent;
+    background-color: green;
     transition: all 0.3s;
 
     &:hover {
@@ -181,7 +184,7 @@
     position: relative;
     width: 100%;
     max-width: 400px;
-    background-color: #f6f8f8;
+    background-color: #2a8888;
 
     @media screen and (min-width: 768px) {
       --scale-closed: 90%;

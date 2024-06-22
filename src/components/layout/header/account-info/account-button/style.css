@@ -5,7 +5,7 @@
     background-color: #8BC34A; /* Color verde claro */
     border: none; /* Sin borde */
     border-radius: 20px; /* Border-radius al 50% para hacerlo ovalado */
-    color: white; /* Color del texto */
+    color: rgb(27, 163, 111); /* Color del texto */
     text-align: center; /* Centrar el texto horizontalmente */
     line-height: 50px; /* Centrar el texto verticalmente */
     font-weight: bold; /* Texto en negrita */

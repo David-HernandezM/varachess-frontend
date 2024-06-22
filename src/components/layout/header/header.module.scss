@@ -53,11 +53,17 @@
   justify-content: space-between;
   align-items: center;
   padding: 30px 0;
-  background: #000000;
+  background: #0b8e5c;
+  z-index: 6;
+  opacity: 0.55;
+  position: sticky;
+  top: 0;
+  
 }
 
 .nav{
   flex-grow: 1;
+  color:rgb(51, 18, 18);
 }
 
 .list {
@@ -69,7 +75,8 @@
   height: 100%;
   list-style: none;
   margin-bottom: 0;
-  color: white !important;
+  color: rgb(58, 53, 53) !important;
+  background-color: #7e5151;
 }
 
 .list li {
@@ -77,20 +84,21 @@
   font-family: jetbrains_mono;
   font-weight: bold;
   font-size: 16px;
+  color:rgb(51, 18, 18);
 }
 
 .list li a {
-  color: white !important;
+  color: rgb(51, 18, 18) !important;
 }
 
 .list li:hover {
-  color: #FFF;
+  color: #9f4040;
   text-shadow: 0 0 10px #7834cf, 0 0 20px #7834cf, 0 0 30px #7834cf;
 }
 
 
 .highlight{
-  color: #FFF !important;
+  color: #7e5151 !important;
   display: flex;
   margin-inline: 20px;
   align-items: center !important;
@@ -109,10 +117,11 @@
 }
 
 .highlight a {
-  color: #FFF !important;
+  color: #482c2c !important;
   display: flex !important;
   align-items: center !important;
   padding: 0 8px;
+  color:#3DDC84;
 }
 
 .highlight svg {
@@ -120,7 +129,7 @@
   width: 1em;
   height: 1em;
   margin-right: 5px;
-  color: #FFF;
+  color: #db2525;
 }
 
 @media screen and (max-width: 1016px) {
@@ -138,6 +147,7 @@
   .list {
     flex-direction: column;
     align-items: center;
+    color:#3DDC84;
   }
 
   .list li {
