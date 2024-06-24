@@ -5,17 +5,19 @@ import { ProgramMetadata } from "@gear-js/api";
 import { Button } from "@chakra-ui/react";
 import {useState} from 'react'
 
-interface StartContractProps {
+interface AcceptContractProps {
   parentSetContract: (arg1: string) => void;
 }
 
+const AcceptEndButton:React.FC <AcceptContractProps> = ( { parentSetContract} ) => {
 
-const PlayButton:React.FC <StartContractProps> = ( { parentSetContract} ) => {
+
+//const AcceptEndButton:React.FC = ( ) => {
   const alert = useAlert();
   const { accounts, account } = useAccount();
   const { api } = useApi();
 
-  const [buttonMsg, setButtonMsg] = useState<string>('Start game on Vara')
+  const [buttonMsg, setButtonMsg] = useState<string>(' Accept and Load to Vara Network ')
   const [disableButton, setDisableButton] = useState<boolean>(false)
   const [loadingButton, setLoadingButton] = useState<boolean>(false)
 
@@ -36,10 +38,10 @@ const PlayButton:React.FC <StartContractProps> = ( { parentSetContract} ) => {
     value: 10000000000001,
 
     payload: { 
-      RequestStartGame: {
+      EndGame: {
                           game_id: 717171,
-                          player_bet: 555,
-                          player: "0x80b92e8c46670db9b72715cf6dbffc5d3c45229b9b8882038d81102e59d6161f",
+                          result_game: "Lose",
+                      
       } 
     }
   };
@@ -71,8 +73,8 @@ const PlayButton:React.FC <StartContractProps> = ( { parentSetContract} ) => {
                 console.log("WEB3: In process GREEN");
               if (status.type === "Finalized") {
                 alert.success(status.type);
-                parentSetContract('INITIATED');
-                setButtonMsg("Game is in progress")
+                parentSetContract('UNINITIATED');
+                setButtonMsg("Results were loaded to Vara Network!")
                 setDisableButton(true)
                 setLoadingButton(false)
                 
@@ -99,7 +101,7 @@ const PlayButton:React.FC <StartContractProps> = ( { parentSetContract} ) => {
 
 
 
-export { PlayButton };
+export { AcceptEndButton };
 
  
     

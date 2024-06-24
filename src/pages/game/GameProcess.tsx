@@ -24,8 +24,11 @@ import {
 
 import {PlayButton} from './PlayButton'
 import { ContractStartGame } from './ContractStartGame';
+import {AcceptEndButton} from './AcceptEndButton'
 
 import { stringCamelCase } from '@polkadot/util';
+
+import {ReadState} from './ReadState'
 
 interface CancelProps {
     invitation_id: string;
@@ -303,8 +306,6 @@ const ForfeitGame: React.FC<ForfeitProps> = ({parentFunction, gameId, otherPlaye
 
     const handleClick = () => {
         console.log("You want to cancel the game")
-        // /endgame/<game_id>/<player_id_won>/<player_id_lost>/<status>')
-        // invite?player_id_from=${localStorage.playerID}&player_id_to=${player_id} 
         fetch(`http://localhost:5000/endgame/${gameId}/${otherPlayerId}/${localStorage.playerID}/2`)
         .then(response => response.json())
         .then(data => {
@@ -420,6 +421,8 @@ const GameProcess = () => {
 
     const [playing, setPlaying] = useState<boolean>(true);
 
+    const [hideForfeitButton, setHideForfeitButton]  = useState<boolean>(false);
+
     const [displayBoard, setDisplayBoard] = useState<boolean>(false);
 
     const [gameState, setGameState] = useState<string>("");
@@ -441,7 +444,7 @@ const GameProcess = () => {
         setInvitationProgress(progress);
         if(gameId !== "" ) {
             setInvitationProgress(3);
-            ContractStartGame( gameId );
+            
         }
 
     }
@@ -535,8 +538,9 @@ const GameProcess = () => {
                             setWhitePlayerId(data[8]);
                             setBlackPlayerId(data[9]);
                             setMessage(data[4])
+                            setPlaying(true)
 
-                            ContractStartGame( data[0] );
+                          
 
                             if ( data[4] == 'FORFEIT' ) {
                                 setPlaying(false)
@@ -589,18 +593,19 @@ const GameProcess = () => {
             setInvitationProgress(0);
             setPlaying(true)
 
+            setContractStart("UNINITIATED")
+
             setGameState("NO GAME")
             setPlayerWinner("UNDETERMINED")
             setPlayerLoser("UNDETERMINED")
 
-            fetch(`http://localhost:5000/closegame/${gameId}`)
-            .then(response => response.json())
-            .then(data => {
-                console.log("CLOSE GAME status: ");
-                console.log(data)
-                
-            })
-            .catch(error => console.error(error));
+            //fetch(`http://localhost:5000/closegame/${gameId}`)
+            //.then(response => response.json())
+            //.then(data => {
+            //    console.log("CLOSE GAME status: ");
+            //    console.log(data)
+            //})
+            //.catch(error => console.error(error));
 
         }
 
@@ -617,6 +622,7 @@ const GameProcess = () => {
 
     const parentForfeitFunction = (playing: boolean) => {
         setPlaying(playing)
+        setHideForfeitButton(true)
     }
 
     const parentSelectPlayer = (player: string) => {
@@ -625,6 +631,25 @@ const GameProcess = () => {
 
     const parentInitiateGame = (stateGame: string) => {
         setContractStart(stateGame);
+    }
+
+    const parentAcceptEndFunction = (stateGame: string) => {
+        setContractStart(stateGame);
+ 
+        setGameId("");
+        setOtherPlayerId("");
+        setOtherPlayerName("");
+        setWhitePlayerId("");
+        setBlackPlayerId("");
+        setInvitationProgress(0);
+        setPlaying(true)
+
+        // setContractStart("UNINITIATED")
+
+        setGameState("NO GAME")
+        setPlayerWinner("UNDETERMINED")
+        setPlayerLoser("UNDETERMINED")
+
     }
 
     return (
@@ -643,18 +668,19 @@ const GameProcess = () => {
 
             {gameId !== '' && <h1> MESSAGE: {message} / {gameState} / WINS: {playerWinner} LOSES: {playerLoser} </h1> }
 
-            { gameId !== '' && <PlayButton parentSetContract={parentInitiateGame}/>}
+            { (gameId !== '' ) && <PlayButton parentSetContract={parentInitiateGame}/>}
 
             { ( gameId !== ''  && contractStart == 'INITIATED') && <ChessGame playerId={localStorage.playerID}  gameId={gameId} 
                                         whitePlayerId={whitePlayerId} blackPlayerId={blackPlayerId} 
                                         draggable= {playing}  handleBoardState={handleBoardState}/>}
         
-            {(gameId !== '' && playing === true) && <ForfeitGame parentFunction={parentForfeitFunction} gameId={gameId} otherPlayerId={otherPlayerId}/> }
+            {(gameId !== '' && contractStart == 'INITIATED' && hideForfeitButton == false ) && <ForfeitGame parentFunction={parentForfeitFunction} gameId={gameId} otherPlayerId={otherPlayerId}/> }
 
-            {( gameId !== '' && playing === false)  && <AcceptAndReset />}
+            {( gameId !== '' && playing === false)  && <AcceptEndButton parentSetContract={parentAcceptEndFunction}/>}
 
             
 
+            
 
             <Modal isOpen={isOpen} onClose={onClose}>
           <ModalOverlay />

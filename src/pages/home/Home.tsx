@@ -2,7 +2,7 @@ import { Box, HStack, VStack, Center, Tabs, TabList, TabPanels, Tab, TabPanel } 
 import { GreenButton } from "./GreenButton";
 import { YellowButton } from "./YellowButton";
 import { RedButton } from "./RedButton";
-import { ReadState } from "./ReadState";
+import { ReadState } from "../game/ReadState";
 import { MenuColors } from "./MenuColors";
 import { GasData } from "./GasData";
 
@@ -96,7 +96,9 @@ function Home() {
 
 
   <h1> Home   </h1>
-    
+<GreenButton />
+
+<RedButton />
     
   </VStack>
   );
