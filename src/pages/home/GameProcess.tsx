@@ -28,7 +28,6 @@ import {AcceptEndButton} from './AcceptEndButton'
 
 import { stringCamelCase } from '@polkadot/util';
 
-import {ReadState} from './ReadState'
 
 interface CancelProps {
     invitation_id: string;
@@ -38,7 +37,7 @@ interface CancelProps {
 const CancelButton : React.FC<CancelProps> = ({ invitation_id, sendDataToParent }) => {
     const CancelInvitation = () =>{
         console.log("You want to cancel invitation with this id" + invitation_id  )
-        fetch(`http://localhost:5000/acceptdeclineinvitation/${invitation_id}/0`)
+        fetch(`https://vchess.pythonanywhere.com/acceptdeclineinvitation/${invitation_id}/0`)
             .then(response => response.json())
             .then(data => {
                 console.log("You tried to CANCEL your invitation, here is response: ");
@@ -62,7 +61,7 @@ const MySentInvitations: React.FC<PropsMySentInvitations>  = ( {sendDataToParent
     const [myArray, setMyArray] = useState<string[][]>([]);
     useEffect( () => {
         const interval = setInterval(() => {
-            fetch(`http://localhost:5000/mysentinvitations/${localStorage.playerID}`)
+            fetch(`https://vchess.pythonanywhere.com/mysentinvitations/${localStorage.playerID}`)
             .then(response => response.json())
             .then(data => {
                 console.log("MY INVITATIONS: ");
@@ -164,8 +163,10 @@ interface Props {
     const acceptInvitation = () => {
         console.log("You want to accept the invitation from  " + player_name_from)
 
+        
+        //fetch(`https://vchess.pythonanywhere.com/acceptdeclineinvitation/${invitation_id}/1`)
+        fetch(`https://vchess.pythonanywhere.com/acceptdeclineinvitation/${invitation_id}/1`)
 
-        fetch(`http://localhost:5000/acceptdeclineinvitation/${invitation_id}/1`)
         .then(response => response.json())
         .then(data => {
             console.log("You tried to accept invitation, here is response: " + data);
@@ -192,7 +193,7 @@ const DeclineButton: React.FC <DeclineProps> = ( {sendDataToParent, invitation_i
     const declineInvitation = () => {
         console.log("Decline invitation with id " + invitation_id)
 
-        fetch(`http://localhost:5000/acceptdeclineinvitation/${invitation_id}/0`)
+        fetch(`https://vchess.pythonanywhere.com/acceptdeclineinvitation/${invitation_id}/0`)
             .then(response => response.json())
             .then(data => {
                 console.log("You tried to DECLINE the invitation, here is response: ");
@@ -219,7 +220,7 @@ const MyInvitations: React.FC<IsecondChildProps> = ({sendDataToParent}) => {
     useEffect( () => {
         const interval = setInterval(() => {
         
-            fetch(`http://localhost:5000/myinvitations/${localStorage.playerID}`)
+            fetch(`https://vchess.pythonanywhere.com/myinvitations/${localStorage.playerID}`)
             .then(response => response.json())
             .then(data => {
                 console.log("I AM BEEING INVITED TO: ");
@@ -306,7 +307,7 @@ const ForfeitGame: React.FC<ForfeitProps> = ({parentFunction, gameId, otherPlaye
 
     const handleClick = () => {
         console.log("You want to cancel the game")
-        fetch(`http://localhost:5000/endgame/${gameId}/${otherPlayerId}/${localStorage.playerID}/2`)
+        fetch(`https://vchess.pythonanywhere.com/endgame/${gameId}/${otherPlayerId}/${localStorage.playerID}/2`)
         .then(response => response.json())
         .then(data => {
             console.log("FORFEIT status: ");
@@ -457,7 +458,7 @@ const GameProcess = () => {
         
 
         if( gameState == 'FINISHED' ) {  
-            fetch(`http://localhost:5000/endgame/${gameId}/${playerWinner}/${playerLoser}/1`)
+            fetch(`https://vchess.pythonanywhere.com/endgame/${gameId}/${playerWinner}/${playerLoser}/1`)
             .then(response => response.json())
             .then(data => {
                 console.log("~~~~~~~~~~~~~~~~~ END GAME status: ");
@@ -474,7 +475,7 @@ const GameProcess = () => {
             if( gameId !== '' ){
                 console.log("~~~~~GameId is set " + gameId)
                 setDisplayBoard(true)
-                   fetch(`http://localhost:5000/gamestatus/${gameId}`)
+                   fetch(`https://vchess.pythonanywhere.com/gamestatus/${gameId}`)
                         .then(response => response.json())
                         .then(data => {
                                 
@@ -511,7 +512,7 @@ const GameProcess = () => {
 
                         
             } else {
-                fetch(`http://localhost:5000/listplayers`)
+                fetch(`https://vchess.pythonanywhere.com/listplayers`)
                     .then(response => response.json())
                     .then(data => {
                         // setInvitationProgress(1);
@@ -527,7 +528,7 @@ const GameProcess = () => {
                         setPlayers(listPlayers);
                     })
                     .catch(error => console.error(error));
-                fetch(`http://localhost:5000/checkifingame/${localStorage.playerID}`)
+                fetch(`https://vchess.pythonanywhere.com/checkifingame/${localStorage.playerID}`)
                     .then(response => response.json())
                     .then(data => {
                         // setInvitationProgress(1);
@@ -561,7 +562,7 @@ const GameProcess = () => {
 
     const selectPlayer = (player_id: string) => {
         console.log("You have player ID" + localStorage.playerID + " with ID: " + player_id)
-        fetch(`http://localhost:5000/invite?player_id_from=${localStorage.playerID}&player_id_to=${player_id}`)
+        fetch(`https://vchess.pythonanywhere.com/invite?player_id_from=${localStorage.playerID}&player_id_to=${player_id}`)
         .then(response => response.json())
         .then(data => {
             console.log("Invitation status: ");
@@ -599,7 +600,7 @@ const GameProcess = () => {
             setPlayerWinner("UNDETERMINED")
             setPlayerLoser("UNDETERMINED")
 
-            //fetch(`http://localhost:5000/closegame/${gameId}`)
+            //fetch(`https://vchess.pythonanywhere.com/closegame/${gameId}`)
             //.then(response => response.json())
             //.then(data => {
             //    console.log("CLOSE GAME status: ");

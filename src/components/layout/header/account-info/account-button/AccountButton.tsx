@@ -16,6 +16,7 @@ function AccountButton({ address, name, onClick, isActive, block }: Props) {
     buttonStyles.medium,
     isActive ? buttonStyles.primary : buttonStyles.light,
     block && buttonStyles.block,
+    
   );
 
   return (

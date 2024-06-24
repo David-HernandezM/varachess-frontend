@@ -35,7 +35,7 @@ export function AccountInfo() {
         const hexAddress = u8aToHex(publicAddress)
 
         console.log("Im checking it out now " + localStorage.namewallet + " with account: " + localStorage.account + " HEXX: " + hexAddress );
-        fetch(`http://localhost:5000/loginplayer?name=${localStorage.namewallet}&account=${localStorage.account}`)
+        fetch(`https://vchess.pythonanywhere.com/loginplayer?name=${localStorage.namewallet}&account=${localStorage.account}`)
                   .then(response => response.json())
                   .then(data => {
                     console.log("This is the result of calling loginplayer:" + JSON.stringify(data));

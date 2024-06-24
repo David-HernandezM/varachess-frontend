@@ -52,6 +52,12 @@ const PlayButton:React.FC <StartContractProps> = ( { parentSetContract, gameId} 
   };
 
   const signer = async () => {
+
+    if (!accounts||!api) {
+        console.log('Accounts is not ready!');
+        return;
+      }
+      
     const localaccount = account?.address;
     const isVisibleAccount = accounts.some(
       (visibleAccount) => visibleAccount.address === localaccount
@@ -61,12 +67,13 @@ const PlayButton:React.FC <StartContractProps> = ( { parentSetContract, gameId} 
       // Create a message extrinsic
       const transferExtrinsic = await api.message.send(message, metadata);
 
-      const injector = await web3FromSource(accounts[0].meta.source);
+      const {signer} = await web3FromSource(accounts[0].meta.source);
 
       transferExtrinsic
         .signAndSend(
           account?.address ?? alert.error("WEB3: No account"),
-          { signer: injector.signer },
+          //{ signer: injector.signer },
+          { signer },
           ({ status }) => {
             if (status.isInBlock) {
               alert.success(status.asInBlock.toString());

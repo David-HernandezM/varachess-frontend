@@ -88,12 +88,12 @@ const ChessGame : React.FC<Props> = ( {playerId, gameId,whitePlayerId,blackPlaye
             const initFen = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
             const encodedInitFEN = encodeURI(initFen);
             setCount(count + 1);
-            //console.log('this is the url to get: ' + `http://localhost:5000/play?player_id=${playerId}&player_color=${playerColor}&game_id=${gameId}&fen=pppp`)
+            //console.log('this is the url to get: ' + `https://vchess.pythonanywhere.com/play?player_id=${playerId}&player_color=${playerColor}&game_id=${gameId}&fen=pppp`)
             //console.log("This is the encoded FEN init" + encodedInitFEN);
 
 
             console.log("GOING to check if there is anything, opposite player's turn " + contra[playerColor as keyof typeof contra])
-            fetch(`http://localhost:5000/status?game_id=${gameId}`)
+            fetch(`https://vchess.pythonanywhere.com/status?game_id=${gameId}`)
                 .then(response => response.json())
                 .then(data => {
                     console.log(" --- This is the fetched data")
@@ -194,7 +194,7 @@ const ChessGame : React.FC<Props> = ( {playerId, gameId,whitePlayerId,blackPlaye
                         setTurno(contra[playerColor as keyof typeof contra])
 
 
-                        fetch(`http://localhost:5000/play?player_id=${playerId}&game_id=${gameId}&player_color=${playerColor}&fen=${encodedNewFEN}`)
+                        fetch(`https://vchess.pythonanywhere.com/play?player_id=${playerId}&game_id=${gameId}&player_color=${playerColor}&fen=${encodedNewFEN}`)
                             .then(response => response.json())
                             .then(data => {
                                 console.log(data)
@@ -246,7 +246,7 @@ const ChessGame : React.FC<Props> = ( {playerId, gameId,whitePlayerId,blackPlaye
     function ResetGame(){
         function resetGame(){
             console.log("Game will reset");
-            fetch(`http://localhost:5000/play?player_id=${playerId}&game_id=${gameId}&player_color=${playerColor}`)
+            fetch(`https://vchess.pythonanywhere.com/play?player_id=${playerId}&game_id=${gameId}&player_color=${playerColor}`)
                 .then(response => response.json())
                 .then(data => {
                                 console.log(data)

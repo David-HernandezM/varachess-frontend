@@ -47,6 +47,12 @@ const AcceptEndButton:React.FC <AcceptContractProps> = ( { parentSetContract} ) 
   };
 
   const signer = async () => {
+    
+    if (!accounts||!api) {
+      console.log('Accounts is not ready!');
+      return;
+    }
+
     const localaccount = account?.address;
     const isVisibleAccount = accounts.some(
       (visibleAccount) => visibleAccount.address === localaccount
