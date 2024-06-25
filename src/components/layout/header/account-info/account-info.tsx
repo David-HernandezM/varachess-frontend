@@ -29,18 +29,23 @@ export function AccountInfo() {
     const keyring = new Keyring();
     
     const interval = setInterval(() => {
-      if( "namewallet" in localStorage){
+		console.log("WALLET: in the interval: " + account.address + "  " + account.meta.name );
+      if( account.address !== '' ){ 
+		console.log("WALLET: namewallet exists");
 
-        const publicAddress = keyring.decodeAddress(localStorage.account)
+        const publicAddress = keyring.decodeAddress(  account.address  )
         const hexAddress = u8aToHex(publicAddress)
 
-        console.log("Im checking it out now " + localStorage.namewallet + " with account: " + localStorage.account + " HEXX: " + hexAddress );
-        fetch(`https://vchess.pythonanywhere.com/loginplayer?name=${localStorage.namewallet}&account=${localStorage.account}`)
+		localStorage.address = account.address;
+		localStorage.name = account.meta.name;
+
+        console.log("WALLET: Im checking it out now " +   account.meta.name  + " with account: " + account.address + " HEXX: " + hexAddress );
+        fetch(`https://vchess.pythonanywhere.com/loginplayer?name=${account.meta.name}&account=${ account.address }`)
                   .then(response => response.json())
                   .then(data => {
-                    console.log("This is the result of calling loginplayer:" + JSON.stringify(data));
+                    console.log("WALLET: This is the result of calling loginplayer:" + JSON.stringify(data));
                     localStorage.playerID = data.status;
-                    console.log("localSotrage.playerID = " + localStorage.playerID)
+                    console.log("WALLET: localSotrage.playerID = " + localStorage.playerID)
 
                   })
                   .catch(error => console.error(error));

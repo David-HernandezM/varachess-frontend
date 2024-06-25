@@ -433,7 +433,9 @@ const GameProcess = () => {
 
     const [contractStart, setContractStart] = useState<string>("UNINITIATED");
 
-    const { isOpen, onOpen, onClose } = useDisclosure()
+    const { isOpen, onOpen, onClose } = useDisclosure();
+
+    
 
     const handleDataFromChild = (gameId: string, otherPlayerId: string, otherPlayerName: string,
                                 whitePlayerId: string, blackPlayerId: string, progress: number):void => {
@@ -660,6 +662,9 @@ const GameProcess = () => {
                 Data from child: {gameId} {otherPlayerId} {otherPlayerName}
                 white player is: {whitePlayerId} black player is: {blackPlayerId} </h3>
                 <h3> Playing Boolean: {playing.toString()}</h3>
+
+                {localStorage.name == '' && <p> YOU NEED TO CONNECT A WALLET!</p>}
+                
             { invitationProgress === 0  && <ShowAvailablePlayers players={players} parentSelectPlayer={parentSelectPlayer} /> }
             <h3> STATUS: {invitationProgress} showModalOnce: {showModalOnce.toString()}  </h3>
 
