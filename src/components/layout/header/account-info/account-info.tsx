@@ -29,6 +29,9 @@ export function AccountInfo() {
     const keyring = new Keyring();
     
     const interval = setInterval(() => {
+
+      if (account ) {
+        
 		console.log("WALLET: in the interval: " + account.address + "  " + account.meta.name );
       if( account.address !== '' ){ 
 		console.log("WALLET: namewallet exists");
@@ -50,6 +53,8 @@ export function AccountInfo() {
                   })
                   .catch(error => console.error(error));
       }
+
+    }
     }, 5000);
     return () => clearInterval(interval);
   }, []);
