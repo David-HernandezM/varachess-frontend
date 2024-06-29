@@ -28,6 +28,8 @@ import {AcceptEndButton} from './AcceptEndButton'
 
 import { stringCamelCase } from '@polkadot/util';
 
+import {Lobby} from './Lobby'
+import { ViewerBets } from './ViewerBets';
 
 interface CancelProps {
     invitation_id: string;
@@ -373,6 +375,8 @@ const ShowAvailablePlayers:React.FC<ShowAvailablePlayersProps> = ({players, pare
 }
 
 
+
+
 function BasicUsage() {
     const { isOpen, onOpen, onClose } = useDisclosure()
     return (
@@ -407,6 +411,42 @@ const ButtonForModal: React.FC = () => {
     )
 }
 
+
+const AdviseToConnect = () => {
+    return(
+        <h1 style={{fontSize: '40px' }}>Please connect your wallet...</h1>
+    )
+}
+
+interface ShowStatusProps {
+    message: string;
+    gameState: string;
+    whitePlayerId:string;
+    blackPlayerId:string;
+    playerWinner:string;
+    playerLoser:string;
+    playerWhiteName:string;
+    playerBlackName:string;
+    viewerMode:boolean;
+}
+
+const ShowStatus:React.FC <ShowStatusProps> = ({message, gameState, whitePlayerId, blackPlayerId, playerWinner, playerLoser, playerWhiteName, playerBlackName, viewerMode}) => {
+    
+    return( 
+        <>
+            
+            { viewerMode == true && <h1 style={{fontSize: '40px', backgroundColor:'purple', color:'teal' }}> VIEWER MODE </h1> }
+            <h1 style={{fontSize: '30px', backgroundColor:'white', color:'black' }}>WHITE: {playerWhiteName}  {whitePlayerId} </h1>
+                
+                <br /> VS. <br />
+            <h1 style={{fontSize: '30px', backgroundColor:'black', color:'white' }}> BLACK: {playerBlackName} {blackPlayerId} </h1>
+        
+            <h1>MESSAGE: {message} / {gameState} / WINS: {playerWinner} LOSES: {playerLoser} </h1>
+             
+        </>
+    )
+}
+
 const GameProcess = () => {
     const [players, setPlayers] = useState<string[][]>([]);
     const [invitationProgress, setInvitationProgress] = useState<number>(0);
@@ -415,6 +455,9 @@ const GameProcess = () => {
     const [otherPlayerName, setOtherPlayerName] = useState("");
     const [whitePlayerId, setWhitePlayerId] = useState("");
     const [blackPlayerId, setBlackPlayerId] = useState("");
+
+    const [playerWhiteName, setPlayerWhiteName] = useState("");
+    const [playerBlackName, setPlayerBlackName] = useState("");
 
     const [message, setMessage] = useState("Game in Progress");
     const [messageTmp, setMessageTmp] = useState("Game in Progress");
@@ -434,6 +477,8 @@ const GameProcess = () => {
     const [contractStart, setContractStart] = useState<string>("UNINITIATED");
 
     const { isOpen, onOpen, onClose } = useDisclosure();
+
+    const [viewerMode, setViewerMode] = useState<boolean>(false)
 
     
 
@@ -456,6 +501,10 @@ const GameProcess = () => {
 
     useEffect(() => { 
         setMessageTmp(message)
+
+        if( localStorage.getItem("address") === null) {
+            setInvitationProgress(-1);
+        }
 
         
 
@@ -488,6 +537,9 @@ const GameProcess = () => {
                             setGameId(data[0]);
                             setWhitePlayerId(data[8]);
                             setBlackPlayerId(data[9]);
+
+                            setPlayerWhiteName(data[10]);
+                            setPlayerBlackName(data[11]);
                             
                             
 
@@ -495,13 +547,13 @@ const GameProcess = () => {
                             if( data[4] == "FORFEIT"){
                                 setPlaying(false)
                                 setMessage("FORFEIT")
-                                
+                                setHideForfeitButton(true)
+                                //setGameId("");
                                // if (showModalOnce === true) {
                                  //   onOpen()
                                  //   setShowModalOnce(false)
 
                                 // }
-                                    
                                     
                                 
                                 
@@ -547,7 +599,9 @@ const GameProcess = () => {
 
                             if ( data[4] == 'FORFEIT' ) {
                                 setPlaying(false)
+                                setHideForfeitButton(true)
                                 //onOpen()
+
                             }
 
                     })
@@ -626,6 +680,8 @@ const GameProcess = () => {
     const parentForfeitFunction = (playing: boolean) => {
         setPlaying(playing)
         setHideForfeitButton(true)
+        setPlayerLoser( localStorage.playerID )
+        setPlayerWinner( otherPlayerId )
     }
 
     const parentSelectPlayer = (player: string) => {
@@ -655,26 +711,57 @@ const GameProcess = () => {
 
     }
 
+    const parentSelectGame = (stateGame: string) => {
+        setGameId(stateGame)
+        setPlaying(false)
+        setInvitationProgress(3)
+        setContractStart("INITIATED")
+        setViewerMode(true)
+    }
+
+//  localStorage.getItem("address") === null
+//  { !("address"  in localStorage)  && <AdviseToConnect /> }
+//                 {gameId !== '' && <ShowStatus whitePlayerId={whitePlayerId} blackPlayerId={blackPlayerId} /> }
+
+
+//<h3> These are the available players: ----- 
+//Data from child: {gameId} {otherPlayerId} {otherPlayerName}
+//white player is: {whitePlayerId} black player is: {blackPlayerId} </h3>
+//<h3> Playing Boolean: {playing.toString()}</h3>
+//             {gameId !== '' && <h1> MESSAGE: {message} / {gameState} / WINS: {playerWinner} LOSES: {playerLoser} </h1> }
+//             <h3> STATUS: {invitationProgress} showModalOnce: {showModalOnce.toString()}  </h3>
+
     return (
         <>
          
-            <h3> These are the available players: ----- 
-                Data from child: {gameId} {otherPlayerId} {otherPlayerName}
-                white player is: {whitePlayerId} black player is: {blackPlayerId} </h3>
-                <h3> Playing Boolean: {playing.toString()}</h3>
+
+                
+        
 
                 {localStorage.name == '' && <p> YOU NEED TO CONNECT A WALLET!</p>}
                 
             { invitationProgress === 0  && <ShowAvailablePlayers players={players} parentSelectPlayer={parentSelectPlayer} /> }
-            <h3> STATUS: {invitationProgress} showModalOnce: {showModalOnce.toString()}  </h3>
 
             { invitationProgress !== 3 &&  <MySentInvitations sendDataToParent={handleDataFromChild}/> }
 
             { invitationProgress !== 3 && <MyInvitations sendDataToParent={handleDataFromChild}/> }
+            
+            { invitationProgress === 0  && <Lobby parentSelectGame={parentSelectGame} /> }
 
-            {gameId !== '' && <h1> MESSAGE: {message} / {gameState} / WINS: {playerWinner} LOSES: {playerLoser} </h1> }
+            {gameId !== '' && <ShowStatus message={message} 
+                                        gameState={gameState} playerWinner={playerWinner} 
+                                        playerLoser={playerLoser}
+                                        whitePlayerId={whitePlayerId} 
+                                        blackPlayerId={blackPlayerId}
+                                        playerWhiteName={playerWhiteName}
+                                        playerBlackName={playerBlackName}
+                                        viewerMode={viewerMode}/> }
 
-            { (gameId !== '' ) && <PlayButton parentSetContract={parentInitiateGame} gameId={gameId}/>}
+            { (gameId !== '' && viewerMode==false) && <PlayButton parentSetContract={parentInitiateGame} gameId={gameId}/>}
+
+            { viewerMode == true && <ViewerBets whitePlayerId={whitePlayerId} blackPlayerId={blackPlayerId}
+                                        playerWhiteName={playerWhiteName}
+                                        playerBlackName={playerBlackName}  />}
 
             { ( gameId !== ''  && contractStart == 'INITIATED') && <ChessGame playerId={localStorage.playerID}  gameId={gameId} 
                                         whitePlayerId={whitePlayerId} blackPlayerId={blackPlayerId} 
@@ -682,11 +769,9 @@ const GameProcess = () => {
         
             {(gameId !== '' && contractStart == 'INITIATED' && hideForfeitButton == false ) && <ForfeitGame parentFunction={parentForfeitFunction} gameId={gameId} otherPlayerId={otherPlayerId}/> }
 
-            {( gameId !== '' && playing === false)  && <AcceptEndButton parentSetContract={parentAcceptEndFunction}/>}
-
-            
-
-            
+            {( gameId !== '' && playing === false)  && <AcceptEndButton parentSetContract={parentAcceptEndFunction} gameId={gameId}/>}
+                
+            <h3> CONTRACT STATUS: {contractStart} </h3>
 
             <Modal isOpen={isOpen} onClose={onClose}>
           <ModalOverlay />

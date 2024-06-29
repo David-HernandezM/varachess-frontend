@@ -8,7 +8,7 @@ import { ComponentType } from 'react';
 import { BrowserRouter } from 'react-router-dom';
 import { ADDRESS } from '@/app/consts';
 import { Alert, alertStyles } from '@/components/ui/alert';
-
+import { DAppContextProvider } from '@/context/dappContext';
 function ApiProvider({ children }: ProviderProps) {
   return <GearApiProvider initialArgs={{ endpoint: ADDRESS.NODE }}>{children}</GearApiProvider>;
 }
@@ -21,7 +21,7 @@ function AlertProvider({ children }: ProviderProps) {
   );
 }
 
-const providers = [BrowserRouter, AlertProvider, ApiProvider, AccountProvider];
+const providers = [BrowserRouter, AlertProvider, ApiProvider, AccountProvider, DAppContextProvider];
 
 function withProviders(Component: ComponentType) {
   return () => providers.reduceRight((children, Provider) => <Provider>{children}</Provider>, <Component />);

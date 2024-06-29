@@ -1,12 +1,15 @@
 
 import { useAccount, useApi, useAlert } from "@gear-js/react-hooks";
 import { web3FromSource } from "@polkadot/extension-dapp";
-import { ProgramMetadata } from "@gear-js/api";
+import { HexString, ProgramMetadata, decodeAddress } from "@gear-js/api";
 import { Button } from "@chakra-ui/react";
-import {useState} from 'react'
+import {useContext, useState} from 'react'
 import { Keyring } from '@polkadot/keyring';
 import { u8aToHex } from '@polkadot/util'
-
+import { dAppContext } from "@/context/dappContext";
+import { useContractUtils } from "@/app/hooks/useContractUtils";
+import { useVoucherUtils } from "@/app/hooks/useVoucherUtils";
+import { mnemonic, account_name } from "@/app/consts";
 interface StartContractProps {
   parentSetContract: (arg1: string) => void;
   gameId: string;
@@ -22,36 +25,202 @@ const PlayButton:React.FC <StartContractProps> = ( { parentSetContract, gameId} 
   const [disableButton, setDisableButton] = useState<boolean>(false)
   const [loadingButton, setLoadingButton] = useState<boolean>(false)
 
+
+  const TVara = 1_000_000_000_000;
   // Add your programID
   const programIDFT =
-    "0x258790299f7ba02baf5238dcf203e8c0eae4cac0a7fae02f5d1b31a55b46b686";
+    "0x45d38a75cb921b943a541f22dc5be002245f21c5579f820bfe2453748b7d5154";
 
   // Add your metadata.txt
   const meta =
-    "00020000000100000000010800000000000000000109000000710a340008307661726163686573735f696f3843686573734d657373616765496e00010c385265717565737442616c616e6365040004010c7536340000004052657175657374537461727447616d6504000801405265717565737447616d6553746172740001001c456e6447616d65040018011c47616d65456e64000200000400000506000808307661726163686573735f696f405265717565737447616d65537461727400000c011c67616d655f696404010c753634000128706c617965725f62657404010c753634000118706c617965720c011c4163746f72496400000c10106773746418636f6d6d6f6e287072696d6974697665731c4163746f724964000004001001205b75383b2033325d0000100000032000000014001400000503001808307661726163686573735f696f1c47616d65456e64000008011c67616d655f696404010c75363400012c726573756c745f67616d651c0124526573756c74456e6400001c08307661726163686573735f696f24526573756c74456e6400010c0c57696e000000104c6f73650001001044726177000200002000000502002408307661726163686573735f696f2843686573735374617465000004011467616d65732801405665633c47616d65537461727465643e0000280000022c002c08307661726163686573735f696f2c47616d6553746172746564000014011c67616d655f696404010c75363400012067616d655f62657404010c75363400013067616d655f706c61796572310c011c4163746f72496400013067616d655f706c61796572320c011c4163746f72496400012c67616d655f73746174757330012853746174757347616d6500003008307661726163686573735f696f2853746174757347616d650001081c5374617274656400000014456e64656400010000";
+    "00020000000100000000010a0000000000000000010d000000c90c3c0008307661726163686573735f696f3843686573734d657373616765496e00010c4052657175657374537461727447616d6504000401405265717565737447616d6553746172740000003053746174757347616d654964040008010c7536340001001c456e6447616d6504001c011c47616d65456e64000200000408307661726163686573735f696f405265717565737447616d65537461727400000c011c67616d655f696408010c753634000128706c617965725f6265740c01107531323800011c706c617965723110011c4163746f72496400000800000506000c00000507001010106773746418636f6d6d6f6e287072696d6974697665731c4163746f724964000004001401205b75383b2033325d0000140000032000000018001800000503001c08307661726163686573735f696f1c47616d65456e6400000c011c67616d655f696408010c75363400012c726573756c745f67616d65200124526573756c74456e64000144706f736974696f6e5f656e645f67616d65240118537472696e6700002008307661726163686573735f696f24526573756c74456e6400010c0c57696e000000104c6f73650001001044726177000200002400000502002808307661726163686573735f696f3c43686573734d6573736167654f757400010838526573706f6e7365537472696e670400240118537472696e670000004c526573706f6e7365426f61726453746174757304002c012c47616d6553746172746564000100002c08307661726163686573735f696f2c47616d6553746172746564000014011c67616d655f696408010c75363400012067616d655f6265740c01107531323800013067616d655f706c617965723110011c4163746f72496400013067616d655f706c617965723210011c4163746f72496400012c67616d655f73746174757330012853746174757347616d6500003008307661726163686573735f696f2853746174757347616d6500010c1c537461727465640000001c57616974696e6700010014456e646564000200003408307661726163686573735f696f2843686573735374617465000004011467616d65733801405665633c47616d65537461727465643e0000380000022c00";
 
   const metadata = ProgramMetadata.from(meta);
 
-  const keyring = new Keyring();
-  const publicAddress = keyring.decodeAddress(localStorage.account)
-  const hexAddress = u8aToHex(publicAddress)
+  // const keyring = new Keyring();
+  
+  // const publicAddress = decodeAddress( account?.address  )
+  // const hexAddress = u8aToHex(publicAddress)
 
   const message: any = {
     destination: programIDFT, // programId
 
     gasLimit: 899819245,
-    value: 10000000000001,
+    value: 1 * TVara,
 
     payload: { 
       RequestStartGame: {
-                          game_id: 9998999,
-                          player_bet: 555,
-                          player: hexAddress,
+                          game_id: gameId,
+                          player_bet: 1 * TVara,
+                          player1:  account ? account.decodedAddress : "",
       } 
     }
   };
 
+  const player = account ? account.decodedAddress : ""; 
+
+
+
+
+
+  ////
+
+  const { 
+    currentVoucherId,
+    setCurrentVoucherId
+} = useContext(dAppContext);
+const {
+    sendMessageWithVoucher
+} = useContractUtils();
+const {
+    generateNewVoucher,
+    checkVoucherForUpdates,
+    vouchersInContract
+} = useVoucherUtils(account_name, mnemonic);
+
+// const alert = useAlert();
+
+const voucherIdOfActualPolkadotAccount = async (): Promise<HexString[]> => {
+    return new Promise(async (resolve, reject) => {
+        if (!account) {
+            alert.error('Account is not ready');
+            reject('Account is not ready');
+            return;
+        }
+
+        const vouchersId = await vouchersInContract(
+          programIDFT,
+            account.decodedAddress
+        );
+
+        resolve(vouchersId);
+    });
+}
+
+const manageVoucherId = async (voucherId: HexString): Promise<void> => {
+    return new Promise(async (resolve, reject) => {
+        if (!account) {
+            alert.error('Account is not ready');
+            reject('Account is not ready');
+            return;
+        }
+
+        try {
+            await checkVoucherForUpdates(
+                account.decodedAddress, 
+                voucherId,
+                1, // add one token to voucher if needed
+                1_200, // new expiration time (One hour )
+                2, // Minimum balance that the voucher must have
+                () => alert.success('Voucher updated!'),
+                () => alert.error('Error while checking voucher'),
+                () => alert.info('Will check for updates in voucher')
+            )
+            resolve();
+        } catch (e) {
+            alert.error('Error while check voucher');
+        }
+    });
+}
+
+const createVoucherForCurrentPolkadotAccount = async (): Promise<HexString> => {
+    return new Promise(async (resolve, reject) => {
+        if (!account) {
+            alert.error('Account is not ready');
+            reject('Account is not ready');
+            return;
+        }
+
+        const voucherIdCreated = await generateNewVoucher(
+            [programIDFT ], // An array to bind the voucher to one or more contracts
+            account.decodedAddress,
+            2, // 2 tokens
+            30, // one minute
+            () => alert.success('Voucher created!'),
+            () => alert.error('Error while creating voucher'),
+            () => alert.info('Will create voucher for current polkadot address!'),
+        );
+
+        if (setCurrentVoucherId) setCurrentVoucherId(voucherIdCreated);
+
+        resolve(voucherIdCreated);
+    });
+}
+
+
+  ////
+
+
+
+
+  console.log("PLAYER_ID IS " + player +". ");
   const signer = async () => {
+    if (!account) {
+      alert.error("Accounts not ready!");
+      return;
+  }
+
+  let voucherIdToUse;
+  
+  if (!currentVoucherId) {
+      const vouchersForAddress = await voucherIdOfActualPolkadotAccount();
+
+      if (vouchersForAddress.length === 0) {
+          voucherIdToUse = await createVoucherForCurrentPolkadotAccount();
+      } else {
+          voucherIdToUse = vouchersForAddress[0];
+
+          if (setCurrentVoucherId) setCurrentVoucherId(voucherIdToUse);
+
+          await manageVoucherId(voucherIdToUse);
+      }
+  } else {
+      await manageVoucherId(currentVoucherId);
+      voucherIdToUse = currentVoucherId;
+  }
+
+  try {
+      await sendMessageWithVoucher(
+          account.decodedAddress,
+          voucherIdToUse,
+          account.meta.source,
+          programIDFT,
+          meta,
+          { 
+            RequestStartGame: {
+                                game_id: gameId,
+                                player_bet: 1 * TVara,
+                                player1:  account ? account.decodedAddress : "",
+            } 
+          }
+          
+          ,
+          1* TVara,
+          () => {     alert.success('Message send with voucher!')
+                      parentSetContract('INITIATED');
+                      setButtonMsg("Game is in progress")
+                      setDisableButton(true)
+                      setLoadingButton(false)
+
+          },
+          () =>{ alert.error('Failed while sending message with voucher')
+                      setButtonMsg("Click again ")
+                      setDisableButton(false)
+                      setLoadingButton(false)
+          },
+          () => {alert.info('Message is in blocks')
+                setButtonMsg("Please wait, connecting to vara network")
+                setDisableButton(true)
+                setLoadingButton(true)
+
+          },
+          () => alert.info('Will send message')
+      );
+  } catch (e) {
+      alert.error('Error while sending message');
+  }
+  }
+  const signer2 = async () => {
 
     if (!accounts||!api) {
         console.log('Accounts is not ready!');
@@ -108,7 +277,7 @@ const PlayButton:React.FC <StartContractProps> = ( { parentSetContract, gameId} 
     }
   };
 
-  return <Button backgroundColor="gray.400" onClick={signer} isLoading={loadingButton} isDisabled={disableButton} > {buttonMsg} </Button>;
+  return <Button backgroundColor="gray.400" onClick={signer} isLoading={loadingButton} isDisabled={disableButton} >  {buttonMsg} </Button>;
 }
 
 

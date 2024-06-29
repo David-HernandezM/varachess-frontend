@@ -13,3 +13,8 @@ export const ROUTES = {
   GAME: '/game',
   NOTFOUND: '*',
 };
+
+
+export const mnemonic ="light flip alien east pigeon furnace neglect lab believe perfect only toss";
+
+export const account_name = "buenviaje"
