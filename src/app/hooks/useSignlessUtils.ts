@@ -1,5 +1,9 @@
-import { GearKeyring } from '@gear-js/api';
+import { GearKeyring, HexString, decodeAddress } from '@gear-js/api';
 import { KeyringPair, KeyringPair$Json } from '@polkadot/keyring/types';
+import { useContractUtils } from './useContractUtils';
+import { useVoucherUtils } from './useVoucherUtils';
+import { mnemonic, account_name, MAIN_CONTRACT } from '../consts';
+import { useAccount, useAlert } from '@gear-js/react-hooks';
 
 /**
  * Custom hook for managing subaccounts to add Signless to the dapp
@@ -21,14 +25,25 @@ import { KeyringPair, KeyringPair$Json } from '@polkadot/keyring/types';
  * // Unlock KeyringPair with password that locks the signless account
  * signlessAccountPair = unlockPair(signlessAccountLocked, "password");
  */
-export const useSignlessUtils = () => {
+export const useSignlessUtils = (name?: string) => {
+    const {
+        sendMessageWithSignlessAccount,
+        readState
+    } = useContractUtils();
+    const {
+        generateNewVoucher,
+    } = useVoucherUtils(account_name, mnemonic);
+    const { account } = useAccount();
+    const alert = useAlert();
+
     /**
      * @returns New KeyringPair for signless account
      */
     const createNewPairAddress = async (): Promise<KeyringPair> => {
         return new Promise(async (resolve, reject) => {
+            const signlessName = name === undefined ? "signlessPair" : name;
             try {
-                const newPair = await GearKeyring.create('signlessPair');
+                const newPair = await GearKeyring.create(signlessName);
                 resolve(newPair.keyring);
             } catch (e) {
                 console.log("Error creating new account pair!");
@@ -114,6 +129,248 @@ export const useSignlessUtils = () => {
         signlessToSend.encoding['encodingType'] = encodingType;
     
         return signlessToSend;
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    const signlessDataForNoWalletAccount = async (noWalletAccount: string, password: string): Promise<KeyringPair> => {
+        return new Promise(async (resolve, reject) => {
+          const newKeyringPair = await createNewPairAddress();
+          const lockedPair = lockPair(newKeyringPair, password);
+        
+          let voucherId; 
+
+          try {
+            voucherId = await generateNewVoucher(
+                [MAIN_CONTRACT.programId],
+                decodeAddress(newKeyringPair.address),
+                3,
+                1_200,
+                () => alert.success('Voucher created!'),
+                () => alert.error('Error while creating voucher'),
+                () => alert.info('Voucher will be created')
+            );
+            
+            // await generateNewVoucher(
+            //   contractId,
+            //   decodeAddress(newKeyringPair.address)
+            // );
+          } catch(e) {
+            reject('Api cant create voucher for signless account');
+            return;
+          }
+    
+          try {
+            await sendMessageWithSignlessAccount(
+                newKeyringPair,
+                MAIN_CONTRACT.programId,
+                voucherId,
+                MAIN_CONTRACT.programMetadata,
+                {
+                    BindSignlessAddressToNoWalletAccount: {
+                      noWalletAccount,
+                      signlessData: modifyPairToContract(lockedPair)
+                    }
+                },
+                0,
+                () => alert.success('Signless account created!'),
+                () => alert.error('Cant create signless subaccount'),
+                () => alert.info('Signless message is in block'),
+                () => alert.info('Will load creation of signless account')
+            );
+            // await sendMessageWithSignlessAccount(
+            //   newKeyringPair,
+            //   contractId,
+            //   ProgramMetadata.from(MAIN_CONTRACT.programMetadata),
+            //   {
+            //     BindSignlessAddressToNoWalletAccount: {
+            //       noWalletAccount,
+            //       signlessData: modifyPairToContract(lockedPair)
+            //     }
+            //   },
+            //   0,
+            //   "Signless accouunt created!",
+            //   "Cant set signless account!",
+            //   "creating signless subaccount",
+            //   "VaraBlocks: "
+            // );
+          } catch(e) {
+            reject('Api cant send message');
+            return;
+          }
+    
+          resolve(newKeyringPair);
+        });
+    }
+
+    const signlessDataForActualPolkadotAccount = async (password: string): Promise<KeyringPair> => {
+        return new Promise(async (resolve, reject) => {
+          if (!account) {
+            console.log('Account is not ready');
+            reject('Account is no ready');
+            return;
+          }
+    
+          let signlessAddress;
+          let keyringPair;
+          let voucherId;
+    
+          try {
+            signlessAddress = await signlessAddressForPolkadotAccount();
+          } catch (e) {
+            reject('Error reading state for contract');
+            return;
+          }
+    
+          if (!signlessAddress) {
+            keyringPair = await createNewPairAddress();
+            const lockedPair = lockPair(keyringPair, password);
+    
+            try {
+                voucherId = await generateNewVoucher(
+                    [MAIN_CONTRACT.programId],
+                    decodeAddress(keyringPair.address),
+                    3,
+                    1_200,
+                    () => alert.success('Voucher created!'),
+                    () => alert.error('Error while creating voucher'),
+                    () => alert.info('Voucher will be created')
+                );
+            //   await generateNewVoucher(
+            //     contractId,
+            //     decodeAddress(keyringPair.address)
+            //   );
+            } catch(e) {
+              reject('Api cant create voucher for signless account');
+              return;
+            }
+            
+            try {
+                await sendMessageWithSignlessAccount(
+                    keyringPair,
+                    MAIN_CONTRACT.programId,
+                    voucherId,
+                    MAIN_CONTRACT.programMetadata,
+                    {
+                        BindSignlessAddressToAddress: {
+                          userAccount: account.decodedAddress,
+                          signlessData: modifyPairToContract(lockedPair)
+                        }
+                    },
+                    0,
+                    () => alert.success('Signless account created!'),
+                    () => alert.error('Cant set signless subaccount'),
+                    () => alert.info('Signless message is in block'),
+                    () => alert.info('Will load creation of signless account')
+                );
+            //   await sendMessageWithSignlessAccount(
+            //     keyringPair,
+            //     contractId,
+            //     ProgramMetadata.from(MAIN_CONTRACT.programMetadata),
+            //     {
+            //       BindSignlessAddressToAddress: {
+            //         userAccount: account.decodedAddress,
+            //         signlessData: modifyPairToContract(lockedPair)
+            //       }
+            //     },
+            //     0,
+            //     "Signless accouunt created!",
+            //     "Cant set signless account!",
+            //     "creating signless subaccount",
+            //     "VaraBlocks: "
+            //   );
+            } catch(e) {
+              reject('Api cant send message');
+              return;
+            }
+    
+          } else {
+            let encryptedSignlessAccount;
+    
+            try {
+              encryptedSignlessAccount = await signlessEncryptedDataInContract(signlessAddress);
+            } catch(e) {
+              alert.error('Error reading state of contract');
+              reject('Error reading state of contract');
+              return;
+            }
+            
+            try {
+              keyringPair = unlockPair(encryptedSignlessAccount, password);
+            } catch (e) {
+              alert.error('Wrong password for signless account!!');
+              reject('Wrong signless password');
+              return;
+            }
+          }
+    
+          resolve(keyringPair);
+        });
+    }
+
+    const signlessEncryptedDataInContract = async (signlessAddress: HexString): Promise<KeyringPair$Json> => {
+        return new Promise(async (resolve, reject) => {
+          try {
+            const contractState: any = await readState(
+              MAIN_CONTRACT.programId,
+              MAIN_CONTRACT.programMetadata,
+              {
+                SignlessAccountData: signlessAddress
+              }
+            );
+    
+            const { signlessAccountData } = contractState;
+    
+            const formatedEncryptedSignlessData = formatContractSignlessData(
+              JSON.parse(JSON.stringify(signlessAccountData))
+            );
+            
+            resolve(formatedEncryptedSignlessData);
+          } catch (e) {
+            reject('Error while reading state');
+          }
+        });
+    }
+
+    const signlessAddressForPolkadotAccount = async (): Promise<HexString | null> => {
+        return new Promise(async (resolve, reject) => {
+          if (!account) {
+            console.log('Account is not ready');
+            reject('Account is no ready');
+            return;
+          }
+    
+          const contractState: any = await readState(
+            MAIN_CONTRACT.programId,
+            MAIN_CONTRACT.programMetadata,
+            {
+              SignlessAccountAddressForAddress: account.decodedAddress
+            }
+          );
+    
+          const { signlessAccountAddressForAddress } = contractState;
+    
+          resolve(signlessAccountAddressForAddress);
+        });
       }
 
 
@@ -122,6 +379,11 @@ export const useSignlessUtils = () => {
         lockPair,
         unlockPair,
         formatContractSignlessData,
-        modifyPairToContract
+        modifyPairToContract,
+
+        signlessDataForNoWalletAccount,
+        signlessDataForActualPolkadotAccount,
+        signlessEncryptedDataInContract,
+        signlessAddressForPolkadotAccount
     }
 }
