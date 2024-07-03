@@ -1,9 +1,18 @@
 
 import { useAccount, useApi, useAlert } from "@gear-js/react-hooks";
 import { web3FromSource } from "@polkadot/extension-dapp";
-import { ProgramMetadata } from "@gear-js/api";
+import { HexString, ProgramMetadata, decodeAddress } from "@gear-js/api";
 import { Button } from "@chakra-ui/react";
-import {useState} from 'react'
+import {useState, useContext} from 'react';
+
+import { MAIN_CONTRACT } from "@/app/consts";
+import { SignlessForm } from "@/components/SignlessForm/SignlessForm";
+import { dAppContext } from "@/context/dappContext";
+import { useContractUtils, useVoucherUtils } from "@/app/hooks";
+import { mnemonic, account_name } from "@/app/consts";
+import { useAppSelector } from "@/app/hooks";
+import { KeyringPair } from '@polkadot/keyring/types';
+import CryptoJs from 'crypto-js';
 
 interface AcceptContractProps {
   parentSetContract: (arg1: string) => void;
@@ -22,40 +31,379 @@ const AcceptEndButton:React.FC <AcceptContractProps> = ( { parentSetContract, ga
   const [disableButton, setDisableButton] = useState<boolean>(false)
   const [loadingButton, setLoadingButton] = useState<boolean>(false)
 
+  const [userFillingTheForm, setUserFillingTheForm] = useState(false);
+
   const TVara = 1_000_000_000_000;
 
-
-  // Add your programID
-  const programIDFT =
-    "0x45d38a75cb921b943a541f22dc5be002245f21c5579f820bfe2453748b7d5154";
-  // Add your metadata.txt
-  const meta =
-    "00020000000100000000010a0000000000000000010d000000c90c3c0008307661726163686573735f696f3843686573734d657373616765496e00010c4052657175657374537461727447616d6504000401405265717565737447616d6553746172740000003053746174757347616d654964040008010c7536340001001c456e6447616d6504001c011c47616d65456e64000200000408307661726163686573735f696f405265717565737447616d65537461727400000c011c67616d655f696408010c753634000128706c617965725f6265740c01107531323800011c706c617965723110011c4163746f72496400000800000506000c00000507001010106773746418636f6d6d6f6e287072696d6974697665731c4163746f724964000004001401205b75383b2033325d0000140000032000000018001800000503001c08307661726163686573735f696f1c47616d65456e6400000c011c67616d655f696408010c75363400012c726573756c745f67616d65200124526573756c74456e64000144706f736974696f6e5f656e645f67616d65240118537472696e6700002008307661726163686573735f696f24526573756c74456e6400010c0c57696e000000104c6f73650001001044726177000200002400000502002808307661726163686573735f696f3c43686573734d6573736167654f757400010838526573706f6e7365537472696e670400240118537472696e670000004c526573706f6e7365426f61726453746174757304002c012c47616d6553746172746564000100002c08307661726163686573735f696f2c47616d6553746172746564000014011c67616d655f696408010c75363400012067616d655f6265740c01107531323800013067616d655f706c617965723110011c4163746f72496400013067616d655f706c617965723210011c4163746f72496400012c67616d655f73746174757330012853746174757347616d6500003008307661726163686573735f696f2853746174757347616d6500010c1c537461727465640000001c57616974696e6700010014456e646564000200003408307661726163686573735f696f2843686573735374617465000004011467616d65733801405665633c47616d65537461727465643e0000380000022c00";
-
-  const metadata = ProgramMetadata.from(meta);
+  const metadata = ProgramMetadata.from(MAIN_CONTRACT.programMetadata);
 
   const message: any = {
-    destination: programIDFT, // programId
+    // destination: programIDFT, // programId
+    destination: MAIN_CONTRACT.programId,
 
     gasLimit: 899819245,
     value: 0,
 
     payload: { 
       EndGame: {
-                          game_id: gameId,
-                          result_game: "Lose",
-                          position_end_game: "Player " + account?.address + " forfeited game",
+        game_id: gameId,
+        result_game: "Lose",
+        position_end_game: "Player " + account?.address + " forfeited game",
                       
       } 
     }
   };
 
+
+
+
+
+  const polkadotAccountIsEnable = useAppSelector((state) => state.AccountsSettings.polkadotEnable);
+  const gaslessIsSelected = useAppSelector((state) => state.AccountsSettings.gaslessIsActive);
+
+  const { 
+    currentVoucherId,
+    signlessAccount, 
+    noWalletSignlessAccountName,
+    setCurrentVoucherId,
+    setSignlessAccount,
+    setNoWalletSignlessAccountName
+  } = useContext(dAppContext);
+  const {
+      sendMessageWithVoucher,
+      sendMessageWithSignlessAccount
+  } = useContractUtils();
+  const {
+      generateNewVoucher,
+      checkVoucherForUpdates,
+      vouchersInContract
+  } = useVoucherUtils(account_name, mnemonic);
+
+
+
+  const voucherIdOfActualPolkadotAccount = async (): Promise<HexString[]> => {
+    return new Promise(async (resolve, reject) => {
+        if (!account) {
+            alert.error('Account is not ready');
+            reject('Account is not ready');
+            return;
+        }
+
+        const vouchersId = await vouchersInContract(
+          MAIN_CONTRACT.programId,
+          account.decodedAddress
+        );
+
+        resolve(vouchersId);
+    });
+  }
+
+  const manageVoucherId = async (voucherId: HexString): Promise<void> => {
+      return new Promise(async (resolve, reject) => {
+          if (!account) {
+              alert.error('Account is not ready');
+              reject('Account is not ready');
+              return;
+          }
+
+          try {
+              await checkVoucherForUpdates(
+                  account.decodedAddress, 
+                  voucherId,
+                  1, // add one token to voucher if needed
+                  1_200, // new expiration time (One hour )
+                  2, // Minimum balance that the voucher must have
+                  () => alert.success('Voucher updated!'),
+                  () => alert.error('Error while checking voucher'),
+                  () => alert.info('Will check for updates in voucher')
+              )
+              resolve();
+          } catch (e) {
+              alert.error('Error while check voucher');
+          }
+      });
+  }
+
+  const createVoucherForCurrentPolkadotAccount = async (): Promise<HexString> => {
+      return new Promise(async (resolve, reject) => {
+          if (!account) {
+              alert.error('Account is not ready');
+              reject('Account is not ready');
+              return;
+          }
+
+          const voucherIdCreated = await generateNewVoucher(
+              [MAIN_CONTRACT.programId], // An array to bind the voucher to one or more contracts
+              account.decodedAddress,
+              2, // 2 tokens
+              30, // one minute
+              () => alert.success('Voucher created!'),
+              () => alert.error('Error while creating voucher'),
+              () => alert.info('Will create voucher for current polkadot address!'),
+          );
+
+          if (setCurrentVoucherId) setCurrentVoucherId(voucherIdCreated);
+
+          resolve(voucherIdCreated);
+      });
+  }
+
+
   const signer = async () => {
+    if (!account) {
+      alert.error("Accounts not ready!");
+      return;
+    }
+
+    let voucherIdToUse;
+    
+    if (!currentVoucherId) {
+        const vouchersForAddress = await voucherIdOfActualPolkadotAccount();
+
+        if (vouchersForAddress.length === 0) {
+            voucherIdToUse = await createVoucherForCurrentPolkadotAccount();
+        } else {
+            voucherIdToUse = vouchersForAddress[0];
+
+            if (setCurrentVoucherId) setCurrentVoucherId(voucherIdToUse);
+
+            await manageVoucherId(voucherIdToUse);
+        }
+    } else {
+        await manageVoucherId(currentVoucherId);
+        voucherIdToUse = currentVoucherId;
+    }
+
+    try {
+        await sendMessageWithVoucher(
+            account.decodedAddress,
+            voucherIdToUse,
+            account.meta.source,
+            MAIN_CONTRACT.programId,
+            MAIN_CONTRACT.programMetadata,
+            { 
+              EndGame: {
+                endGame: {
+                  game_id: gameId,
+                  result_game: "Lose",
+                  position_end_game: "Player " + account?.address + " forfeited game",
+                                
+                },
+                messageData: [null, null]
+              }
+            },
+            1* TVara,
+            () => {     
+              alert.success('Message send with voucher!')
+              parentSetContract('UNINITIATED');
+              setButtonMsg("Results were loaded to Vara Network!")
+              setDisableButton(true)
+              setLoadingButton(false)
+            },
+            () =>{ 
+              alert.error('Failed while sending message with voucher')
+              setDisableButton(false)
+              setLoadingButton(false)
+            },
+            () => {
+              alert.info('Message is in blocks')
+              setButtonMsg("Please wait, connecting to vara network")
+              setDisableButton(true)
+              setLoadingButton(true)
+            },
+            () => alert.info('Will send message')
+        );
+    } catch (e) {
+        alert.error('Error while sending message');
+    }
+  }
+
+
+
+
+
+
+  const sendMessageWithSignlessData = async (payload: any) => {
+    if (!signlessAccount) {
+        alert.error('no signless account!');
+        return
+    }
+
+    if (!currentVoucherId) {
+
+      alert.error('No voucher for sigless account!');
+      return;
+    }
+
+    try {
+        await checkVoucherForUpdates(
+            decodeAddress(signlessAccount.address),
+            currentVoucherId,
+            1,
+            1_200, 
+            2,
+            () => alert.success('Voucher get an update!'),
+            () => alert.error('Error while updating voucher'),
+            () => alert.info('Check voucher for updates...')
+        );
+    } catch(e) {
+        alert.error('Error while updating signless account voucher');
+        return;
+    }
+
+    try {
+        await sendMessageWithSignlessAccount(
+            signlessAccount,
+            MAIN_CONTRACT.programId,
+            currentVoucherId,
+            MAIN_CONTRACT.programMetadata,
+            payload,
+            0,
+            () => {
+              alert.success('Message send with signless Account!');
+              parentSetContract('UNINITIATED');
+              setButtonMsg("Results were loaded to Vara Network!")
+              setDisableButton(true)
+              setLoadingButton(false)
+            },
+            () => {
+              alert.error('Error while sending message')
+              setDisableButton(false)
+              setLoadingButton(false)
+            },
+            () => {
+              alert.info('Message in block!')
+              setButtonMsg("Please wait, connecting to vara network")
+              setDisableButton(true)
+              setLoadingButton(true)
+            },
+            () => alert.info('Will send a message')
+        )
+    } catch (e) {
+        alert.error('Error while sending signless account');
+        return;
+    }
+}
+
+
+
+
+
+
+
+  const handleClick = async () => {
+    // console.log('Se abrio el modal!');
+    // setUserFillingTheForm(true);
+
+    if (polkadotAccountIsEnable) {
+      if (!gaslessIsSelected) {
+        if (!signlessAccount) {
+          setUserFillingTheForm(true);
+          return;
+        }
+
+        await sendMessageWithSignlessData(
+          {
+            // RequestStartGame: {
+            //   requestGameStart: {
+            //     game_id: gameId,
+            //     player_bet: 0,
+            //     player1:  account?.decodedAddress,
+            //   },
+            //   messageData: [account?.decodedAddress, null]
+            // }
+            EndGame: {
+              endGame: {
+                game_id: gameId,
+                result_game: "Lose",
+                position_end_game: "Player " + account?.address + " forfeited game",
+                              
+              },
+              messageData: [account?.decodedAddress, null]
+            }
+          }
+        );
+      } else {
+        // using wallet voucher session.
+        await signer();
+      }
+    } else {
+      if (!signlessAccount) {
+        setUserFillingTheForm(true);
+        return;
+      }
+
+      const temp = CryptoJs.SHA256(
+        JSON.stringify(noWalletSignlessAccountName)
+      ).toString();
+
+      await sendMessageWithSignlessData(
+        {
+          // RequestStartGame: {
+          //   requestGameStart: {
+          //     game_id: gameId,
+          //     player_bet: 0,
+          //     player1:  decodeAddress(signlessAccount.address),
+          //   },
+          //   messageData: [null, temp]
+          // }
+          EndGame: {
+            endGame: {
+              game_id: gameId,
+              result_game: "Lose",
+              position_end_game: "Player " + account?.address + " forfeited game",
+                            
+            },
+            messageData: [null, temp]
+          }
+        }
+      );
+    }
+  }
+  
+
+  const manageSignlessAccount = (signlessAccount: KeyringPair, encryptedName: string | null) : Promise<void> => {
+    return new Promise(async (resolve, reject) => {
+      
+      
+      if (setSignlessAccount) setSignlessAccount(signlessAccount);
+      if (setNoWalletSignlessAccountName) setNoWalletSignlessAccountName(encryptedName ?? "no-wallet-singless-name");
+
+      try {
+        const signlessVoucherId = await vouchersInContract(
+          MAIN_CONTRACT.programId, 
+          decodeAddress(signlessAccount.address)
+        );
+
+        if (setCurrentVoucherId) setCurrentVoucherId(signlessVoucherId[0]);
+
+      } catch (e) {
+        alert.error('Error while setting signless account voucher id');
+      }
+
+      resolve();
+    });
+  }
+
+
+
+
+
+
+
+  
+
+  
+
+
+  const signer1 = async () => {
     
     if (!accounts||!api) {
       console.log('Accounts is not ready!');
       return;
     }
+
+    setUserFillingTheForm(true);
 
     const localaccount = account?.address;
     const isVisibleAccount = accounts.some(
@@ -75,18 +423,13 @@ const AcceptEndButton:React.FC <AcceptContractProps> = ( { parentSetContract, ga
           ({ status }) => {
             if (status.isInBlock) {
               alert.success(status.asInBlock.toString());
-              setButtonMsg("Please wait, connecting to vara network")
-              setDisableButton(true)
-              setLoadingButton(true)
+              
               
             } else {
                 console.log("WEB3: In process GREEN");
               if (status.type === "Finalized") {
                 alert.success(status.type);
-                parentSetContract('UNINITIATED');
-                setButtonMsg("Results were loaded to Vara Network!")
-                setDisableButton(true)
-                setLoadingButton(false)
+                
                 
 
               }
@@ -95,9 +438,7 @@ const AcceptEndButton:React.FC <AcceptContractProps> = ( { parentSetContract, ga
         )
         .catch((error: any) => {
           console.log("WEB3:  :( transaction failed", error);
-          setButtonMsg("Click again "+ error)
-          setDisableButton(false)
-          setLoadingButton(false)
+          
           
         });
     } else {
@@ -106,7 +447,35 @@ const AcceptEndButton:React.FC <AcceptContractProps> = ( { parentSetContract, ga
     }
   };
 
-  return <Button backgroundColor="gray.400" onClick={signer} isLoading={loadingButton} isDisabled={disableButton} > {buttonMsg} </Button>;
+
+
+
+
+
+
+
+
+
+
+  return (
+    <>
+      { 
+        userFillingTheForm &&
+        <SignlessForm 
+          close={() => setUserFillingTheForm(false)}
+        />
+      }
+      <Button 
+        backgroundColor="gray.400" 
+        // onClick={signer} 
+        onClick={handleClick}
+        isLoading={loadingButton}
+        isDisabled={disableButton}
+      > 
+        {buttonMsg} 
+      </Button>
+    </>
+  );
 }
 
 

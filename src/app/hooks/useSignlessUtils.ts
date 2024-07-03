@@ -25,7 +25,7 @@ import { useAccount, useAlert } from '@gear-js/react-hooks';
  * // Unlock KeyringPair with password that locks the signless account
  * signlessAccountPair = unlockPair(signlessAccountLocked, "password");
  */
-export const useSignlessUtils = (name?: string) => {
+export const useSignlessUtils = () => {
     const {
         sendMessageWithSignlessAccount,
         readState
@@ -39,9 +39,9 @@ export const useSignlessUtils = (name?: string) => {
     /**
      * @returns New KeyringPair for signless account
      */
-    const createNewPairAddress = async (): Promise<KeyringPair> => {
+    const createNewPairAddress = async (nameNoWalletAccount?: string): Promise<KeyringPair> => {
         return new Promise(async (resolve, reject) => {
-            const signlessName = name === undefined ? "signlessPair" : name;
+            const signlessName = nameNoWalletAccount === undefined ? "signlessPair" : nameNoWalletAccount;
             try {
                 const newPair = await GearKeyring.create(signlessName);
                 resolve(newPair.keyring);
@@ -152,9 +152,9 @@ export const useSignlessUtils = (name?: string) => {
 
 
 
-    const signlessDataForNoWalletAccount = async (noWalletAccount: string, password: string): Promise<KeyringPair> => {
+    const signlessDataForNoWalletAccount = async (noWalletAccount: string, password: string, nameNoWalletAccount?: string): Promise<KeyringPair> => {
         return new Promise(async (resolve, reject) => {
-          const newKeyringPair = await createNewPairAddress();
+          const newKeyringPair = await createNewPairAddress(nameNoWalletAccount);
           const lockedPair = lockPair(newKeyringPair, password);
         
           let voucherId; 
@@ -186,7 +186,7 @@ export const useSignlessUtils = (name?: string) => {
                 voucherId,
                 MAIN_CONTRACT.programMetadata,
                 {
-                    BindSignlessAddressToNoWalletAccount: {
+                    BindSignlessDataToNoWalletAccount: {
                       noWalletAccount,
                       signlessData: modifyPairToContract(lockedPair)
                     }
@@ -271,10 +271,10 @@ export const useSignlessUtils = (name?: string) => {
                     voucherId,
                     MAIN_CONTRACT.programMetadata,
                     {
-                        BindSignlessAddressToAddress: {
-                          userAccount: account.decodedAddress,
-                          signlessData: modifyPairToContract(lockedPair)
-                        }
+                      BindSignlessDataToAddress: {
+                        userAddress: account.decodedAddress,
+                        signlessData: modifyPairToContract(lockedPair)
+                      }
                     },
                     0,
                     () => alert.success('Signless account created!'),
@@ -366,10 +366,14 @@ export const useSignlessUtils = (name?: string) => {
               SignlessAccountAddressForAddress: account.decodedAddress
             }
           );
+
+          // console.log('------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------');
+          // console.log(contractState);
+          // console.log('------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------');
+          
+          const { signlessAccountAddress } = contractState;
     
-          const { signlessAccountAddressForAddress } = contractState;
-    
-          resolve(signlessAccountAddressForAddress);
+          resolve(signlessAccountAddress);
         });
       }
 

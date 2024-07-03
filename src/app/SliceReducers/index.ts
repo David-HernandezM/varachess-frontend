@@ -4,5 +4,7 @@ export {
     apiIsDisconnected,
     polkadotAccountIsEnable,
     setSignlessAddress,
-    setNoWalletEncryptedName
+    setNoWalletEncryptedName,
+    setGaslessActive,
+    setShowGaslessSwitch
 } from './AppGlobalData/AppGlobalDataSlice';

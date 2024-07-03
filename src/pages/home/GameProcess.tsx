@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { useEffect } from 'react';
 import { ChessGame } from "./ChessGame";
 import {
@@ -26,10 +26,22 @@ import {PlayButton} from './PlayButton'
 // import { ContractStartGame } from './ContractStartGame';
 import {AcceptEndButton} from './AcceptEndButton'
 
+
 import { stringCamelCase } from '@polkadot/util';
 
 import {Lobby} from './Lobby'
 import { ViewerBets } from './ViewerBets';
+
+
+import { useAppSelector } from '@/app/hooks';
+import { SignlessForm } from '@/components/SignlessForm/SignlessForm';
+import { dAppContext } from '@/context/dappContext';
+import { KeyringPair } from '@polkadot/keyring/types';
+import { decodeAddress } from '@gear-js/api';
+import { mnemonic, account_name } from '@/app/consts';
+import { MAIN_CONTRACT } from '@/app/consts';
+import { useAccount, useAlert } from '@gear-js/react-hooks';
+import { useVoucherUtils } from '@/app/hooks';
 
 interface CancelProps {
     invitation_id: string;
@@ -448,6 +460,23 @@ const ShowStatus:React.FC <ShowStatusProps> = ({message, gameState, whitePlayerI
 }
 
 const GameProcess = () => {
+
+    const {
+        generateNewVoucher,
+        checkVoucherForUpdates,
+        vouchersInContract,
+    } = useVoucherUtils(account_name, mnemonic);
+    const polkadotAccountIsEnable = useAppSelector((state) => state.AccountsSettings.polkadotEnable);
+    const alert = useAlert();
+    const { 
+        signlessAccount,
+        setSignlessAccount,
+        setNoWalletSignlessAccountName,
+        setCurrentVoucherId
+    } = useContext(dAppContext);
+    const [signlessModalIsOpen, setsignlessModalIsOpen] = useState(false);
+    
+
     const [players, setPlayers] = useState<string[][]>([]);
     const [invitationProgress, setInvitationProgress] = useState<number>(0);
     const [gameId, setGameId] = useState<string>("");
@@ -731,6 +760,41 @@ const GameProcess = () => {
 //             {gameId !== '' && <h1> MESSAGE: {message} / {gameState} / WINS: {playerWinner} LOSES: {playerLoser} </h1> }
 //             <h3> STATUS: {invitationProgress} showModalOnce: {showModalOnce.toString()}  </h3>
 
+    const manageSignlessAccount = (signlessAccount: KeyringPair, encryptedName: string | null) : Promise<void> => {
+        return new Promise(async (resolve) => {
+            if (setSignlessAccount) setSignlessAccount(signlessAccount);
+            if (setNoWalletSignlessAccountName) setNoWalletSignlessAccountName(encryptedName ?? "no-wallet-singless-name");
+
+            try {
+                const signlessVoucherId = await vouchersInContract(
+                    MAIN_CONTRACT.programId, 
+                    decodeAddress(signlessAccount.address)
+                );
+
+                if (setCurrentVoucherId) setCurrentVoucherId(signlessVoucherId[0]);
+
+                // 0x00b146b2322c70133b7b58416550aa9db16c74fe352f316a99da4f93856e596c
+
+                // console.log('------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------');
+                // console.log(signlessVoucherId);
+                // console.log('------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------');
+            } catch (e) {
+                alert.error('Error while setting signless account voucher id');
+            }
+
+            const signlessAddress = decodeAddress(signlessAccount.address);
+
+            localStorage.address = signlessAddress
+            localStorage.name = encryptedName;
+
+            const serverResponse = await fetch(`https://vchess.pythonanywhere.com/loginplayer?name=${encryptedName}&account=${ signlessAddress }`);
+            const formatedResponse = await serverResponse.json();
+
+            localStorage.playerID = formatedResponse.status;
+            resolve();
+        });
+    }
+
     return (
         <>
          
@@ -773,6 +837,26 @@ const GameProcess = () => {
                 
             <h3> CONTRACT STATUS: {contractStart} </h3>
 
+            {/* TODO */}
+            {
+                (!polkadotAccountIsEnable && !signlessAccount) &&
+                <Button
+                    onClick={() => {
+                        setsignlessModalIsOpen(true);
+                    }}
+                >
+                    Play with user and password
+                </Button>
+            }
+
+            {
+                signlessModalIsOpen && 
+                <SignlessForm 
+                    close={() => setsignlessModalIsOpen(false)}
+                    onDataCollected={manageSignlessAccount}
+                />
+            }
+            
             <Modal isOpen={isOpen} onClose={onClose}>
           <ModalOverlay />
           <ModalContent>

@@ -11,10 +11,29 @@ export const buttonVariants = cva('', {
       black: styles.black,
       outline: styles.outline,
       text: styles.text,
+      lightBlue: styles.lightBlue
     },
     size: {
-      small: '',
+      small: styles.sm,
       medium: styles.md,
+      container: styles.cs
+    },
+    textSize: {
+      small: styles.txtSmall,
+      medium: styles.txtMedium,
+      large: styles.txtLarge
+    },
+    textWeight: {
+      weight1: styles.textWeight1,
+      weight2: styles.textWeight2,
+      weight3: styles.textWeight3,
+      weightBold: styles.textWeightBold
+    },
+    rounded: {
+      rounded1: styles.rounded1,
+      rounded2: styles.rounded2,
+      rounded3: styles.rounded3,
+      rounded4: styles.rounded4
     },
     width: {
       normal: '',
@@ -43,6 +62,9 @@ export function Button({
   className,
   variant,
   size,
+  textSize,
+  textWeight,
+  rounded,
   state,
   isLoading,
   width,
@@ -55,6 +77,9 @@ export function Button({
       className={buttonVariants({
         variant,
         size,
+        textSize,
+        textWeight,
+        rounded,
         state: isLoading ? 'loading' : 'normal',
         width,
         className,

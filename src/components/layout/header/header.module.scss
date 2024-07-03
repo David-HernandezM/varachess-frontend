@@ -53,12 +53,16 @@
   justify-content: space-between;
   align-items: center;
   padding: 30px 0;
-  background: #0b8e5c;
+  background: #0b8e5ca8;
   z-index: 6;
-  opacity: 0.55;
   position: sticky;
   top: 0;
   
+}
+
+.optionsContainer {
+  display: flex;
+  gap: 30px;
 }
 
 .nav{

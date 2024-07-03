@@ -3,7 +3,8 @@ import { apiIsBusy } from '@/app/SliceReducers';
 import { useContractUtils, useSignlessUtils } from '@/app/hooks';
 import { Modal, Input } from '@gear-js/vara-ui';
 import { useForm } from 'react-hook-form';
-import { Button } from "@/components/ui/button";
+// import { Button } from "@/components/ui/button";
+import { Button } from '@/components/ui/button';
 import { useState, useContext } from 'react';
 import { useAlert } from '@gear-js/react-hooks';
 import { dAppContext } from '@/context/dappContext';
@@ -34,7 +35,10 @@ const DEFAULT_VALUES: FormData = {
 };
 
 export const SignlessForm = ({ close, onDataCollected }: Props) =>  {
-    const {setSignlessData} = useContext(dAppContext);
+    const {
+        setSignlessData,
+        setCurrentVoucherId
+    } = useContext(dAppContext);
 
     const actualSessionHasPolkadotAccount = useAppSelector((state) => state.AccountsSettings.polkadotEnable);
     const apiIsReady = useAppSelector((state) => state.AccountsSettings.apiStarted);
@@ -69,9 +73,15 @@ export const SignlessForm = ({ close, onDataCollected }: Props) =>  {
         let noWalletNewSignlessData;
 
         try {
+            const temp = CryptoJs.SHA256(
+                JSON.stringify(encryptedAccount)
+            ).toString();
+
             noWalletNewSignlessData = await signlessDataForNoWalletAccount(
-                encryptedAccount,
-                noWalletAccountData.password
+                // encryptedAccount,
+                temp,
+                noWalletAccountData.password,
+                encryptedAccount
             );
         } catch (e) {
             alert.error('Error when creating signless account');
@@ -80,7 +90,6 @@ export const SignlessForm = ({ close, onDataCollected }: Props) =>  {
         } 
 
         if (setSignlessData) {
-            console.log('SE GUARDO LA CUENTA SIGNLESS!!!');
             
             setSignlessData(noWalletNewSignlessData);
         }
@@ -101,7 +110,7 @@ export const SignlessForm = ({ close, onDataCollected }: Props) =>  {
             JSON.stringify(accountName)
         ).toString();
 
-        setEncryptedAccount(noWalletAccount);
+        setEncryptedAccount(accountName);
 
         const contractState: any = await readState(
             MAIN_CONTRACT.programId,
@@ -111,18 +120,20 @@ export const SignlessForm = ({ close, onDataCollected }: Props) =>  {
             }
         );
 
-        const { signlessAccountAddressForNoWalletAccount } = contractState;
+        
+        
 
-        if (signlessAccountAddressForNoWalletAccount) {
+        const { signlessAccountAddress } = contractState;
+
+        if (signlessAccountAddress) {
             const noWalletSignlessData = await signlessEncryptedDataInContract(
-                signlessAccountAddressForNoWalletAccount
+                signlessAccountAddress
             );
 
             try {
                 const keyringPair = unlockPair(noWalletSignlessData, password);
 
                 if (setSignlessData) {
-                    console.log('SE GUARDO LA CUENTA SIGNLESS!!!');
                     setSignlessData(keyringPair);
                 }
                 
@@ -132,7 +143,7 @@ export const SignlessForm = ({ close, onDataCollected }: Props) =>  {
                 alert.success('Signless account set!');
                 close();
 
-                if (onDataCollected) onDataCollected(keyringPair, noWalletAccount);
+                if (onDataCollected) onDataCollected(keyringPair, accountName);
             } catch (e) {
                 alert.error('Wrong password for signless account!!');
             }
@@ -149,8 +160,9 @@ export const SignlessForm = ({ close, onDataCollected }: Props) =>  {
 
         try {
             const signlessDataAccount = await signlessDataForActualPolkadotAccount(password);
+
             if (setSignlessData) {
-                console.log('SE GUARDO LA CUENTA SIGNLESS!!!');
+                
                 setSignlessData(signlessDataAccount);
             }
 
