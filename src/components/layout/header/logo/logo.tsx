@@ -1,10 +1,16 @@
 import { Link } from 'react-router-dom';
-import './logo.module.scss';
 import LogoVaraChess from './LOGOVARACHESS_TEXT.png'
+
+import './logo.scss';
+
 function Logo() {
   return (
     <Link to="/">
-      <img style={{height: "120px"}} src={LogoVaraChess} alt="Logo Vara Chess"/>
+      <img 
+        src={LogoVaraChess} 
+        alt="Logo Vara Chess"
+        className='logo-img'
+      />
     </Link>
   );
 }

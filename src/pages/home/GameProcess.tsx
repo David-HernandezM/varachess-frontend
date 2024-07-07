@@ -450,14 +450,54 @@ const ShowStatus:React.FC <ShowStatusProps> = ({message, gameState, whitePlayerI
             { viewerMode == true && <h1 style={{fontSize: '40px', backgroundColor:'purple', color:'teal' }}> VIEWER MODE </h1> }
             <h1 style={{fontSize: '30px', backgroundColor:'white', color:'black' }}>WHITE: {playerWhiteName}  {whitePlayerId} </h1>
                 
-                <br /> VS. <br />
+                <br /> VS <br />
             <h1 style={{fontSize: '30px', backgroundColor:'black', color:'white' }}> BLACK: {playerBlackName} {blackPlayerId} </h1>
         
-            <h1>MESSAGE: {message} / {gameState} / WINS: {playerWinner} LOSES: {playerLoser} </h1>
+            {/* TODO */}
+            {/* <h1>MESSAGE: {message} / {gameState} / WINS: {playerWinner} LOSES: {playerLoser} </h1> */}
              
         </>
     )
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 const GameProcess = () => {
 
@@ -821,7 +861,8 @@ const GameProcess = () => {
                                         playerBlackName={playerBlackName}
                                         viewerMode={viewerMode}/> }
 
-            { (gameId !== '' && viewerMode==false) && <PlayButton parentSetContract={parentInitiateGame} gameId={gameId}/>}
+            {/* TODO */}
+            {/* { (gameId !== '' && viewerMode === false) && <PlayButton parentSetContract={parentInitiateGame} gameId={gameId}/>} */}
 
             { viewerMode == true && <ViewerBets whitePlayerId={whitePlayerId} blackPlayerId={blackPlayerId}
                                         playerWhiteName={playerWhiteName}

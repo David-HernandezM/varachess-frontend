@@ -11,17 +11,22 @@ type Props = {
 };
 
 export function Header({ isAccountVisible }: Props) {
-  const x = useAppSelector((state) => state.AccountsSettings.polkadotEnable);
+  const polkadotWalletEnable = useAppSelector((state) => state.AccountsSettings.polkadotEnable);
 
   return (
     <header className={styles.header}>
       <Logo />
       
-      <div className={styles.optionsContainer}>
-        <ToggleSwitchGasless />
-        <ToggleSwitchAccounts />
-        {isAccountVisible && <AccountInfo />}
-      </div>
+      {
+        polkadotWalletEnable && (
+          <div className={styles.optionsContainer}>
+            <ToggleSwitchGasless />
+            <ToggleSwitchAccounts />
+            {isAccountVisible && <AccountInfo />}
+          </div>
+        )
+      }
+      
     </header>
   );
 

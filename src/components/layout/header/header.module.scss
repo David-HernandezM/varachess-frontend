@@ -51,17 +51,18 @@
 .header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  padding: 30px 0;
-  background: #0b8e5ca8;
-  z-index: 6;
+  align-items: flex-start;
+  // align-items: center;
+  padding: 15px 20px;
   position: sticky;
+  width: 100%;
   top: 0;
-  
+  margin-bottom: -130px;
 }
 
 .optionsContainer {
   display: flex;
+  margin-top: 40px;
   gap: 30px;
 }
 

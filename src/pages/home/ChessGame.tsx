@@ -281,7 +281,7 @@ const ChessGame : React.FC<Props> = ( {playerId, gameId,whitePlayerId,blackPlaye
             />
 
             <h1> TURN: {turno == 'w' ? 'WHITE' : 'BLACK'} IS NEXT (You are {playerColor} Player ID: {playerId} Game ID: {gameId})</h1>
-            <h2> Game States:</h2>
+            {/* <h2> Game States:</h2>
                 <h3> Check: {checkState.toString()}</h3>
                 <h3> Checkmate: {checkmateState.toString()} </h3> 
                 <h3> Draw: {drawState.toString()} </h3> 
@@ -293,7 +293,7 @@ const ChessGame : React.FC<Props> = ( {playerId, gameId,whitePlayerId,blackPlaye
            
             <p> Player ID: {playerId} </p>
             <p> Game ID: {gameId} </p>
-           
+            */}
             
             
 

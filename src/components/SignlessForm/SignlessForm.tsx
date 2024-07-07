@@ -3,7 +3,6 @@ import { apiIsBusy } from '@/app/SliceReducers';
 import { useContractUtils, useSignlessUtils } from '@/app/hooks';
 import { Modal, Input } from '@gear-js/vara-ui';
 import { useForm } from 'react-hook-form';
-// import { Button } from "@/components/ui/button";
 import { Button } from '@/components/ui/button';
 import { useState, useContext } from 'react';
 import { useAlert } from '@gear-js/react-hooks';
@@ -18,6 +17,7 @@ import CryptoJs from 'crypto-js';
 
 import './SignlessForm.scss';
 import { decodeAddress } from '@gear-js/api';
+import { generateRandomString } from '@/app/utils';
 
 interface Props {
     close: () => void,
@@ -29,15 +29,22 @@ interface FormData {
     password: string,
 }
 
-const DEFAULT_VALUES: FormData = {
-    accountName: '',
-    password: '',
-};
+
 
 export const SignlessForm = ({ close, onDataCollected }: Props) =>  {
+
+    const userRandom = `user${generateRandomString(14)}`;
+    const passwordRandom = generateRandomString(12);
+
+    const DEFAULT_VALUES: FormData = {
+        accountName: userRandom,
+        password: passwordRandom
+    };
+
+
+
     const {
         setSignlessData,
-        setCurrentVoucherId
     } = useContext(dAppContext);
 
     const actualSessionHasPolkadotAccount = useAppSelector((state) => state.AccountsSettings.polkadotEnable);
@@ -61,8 +68,8 @@ export const SignlessForm = ({ close, onDataCollected }: Props) =>  {
     } = useSignlessUtils();
     const [openConfirmNoWalletAccount, setOpenConfirmNoWalletAccount] = useState(false);
     const [noWalletAccountData, setNoWalletAccountData] = useState<FormData>({ 
-        accountName: '', 
-        password: '',
+        accountName: userRandom, 
+        password:  passwordRandom
     });
     const [encryptedAccount, setEncryptedAccount] = useState("");
     
@@ -104,6 +111,10 @@ export const SignlessForm = ({ close, onDataCollected }: Props) =>  {
     }
 
     const onSubmitSignless = async ({ accountName, password }: FormData) => {
+        // console.log('=============================================================================================');
+        // console.log(`${accountName} - ${password}`);
+        // console.log('=============================================================================================');
+
         dispatch(apiIsBusy(true));
 
         const noWalletAccount = CryptoJs.SHA256(
@@ -126,6 +137,10 @@ export const SignlessForm = ({ close, onDataCollected }: Props) =>  {
         const { signlessAccountAddress } = contractState;
 
         if (signlessAccountAddress) {
+            console.log('=============================================================================================');
+            console.log('SI TIENE ACCOUNT');
+            console.log('=============================================================================================');
+            
             const noWalletSignlessData = await signlessEncryptedDataInContract(
                 signlessAccountAddress
             );
@@ -148,6 +163,9 @@ export const SignlessForm = ({ close, onDataCollected }: Props) =>  {
                 alert.error('Wrong password for signless account!!');
             }
         } else {
+            console.log('=============================================================================================');
+            console.log('SI TIENE ACCOUNT');
+            console.log('=============================================================================================');
             setOpenConfirmNoWalletAccount(true);
         }
 
